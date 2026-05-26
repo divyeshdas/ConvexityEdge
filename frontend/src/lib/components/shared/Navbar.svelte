@@ -1,7 +1,8 @@
 <script lang="ts">
   import { page } from '$app/stores';
   import { theme } from '$stores/theme';
-  import { selectedSymbol, lastUpdated, isStale, nextRefreshIn } from '$stores/market';
+  import { selectedSymbol, lastUpdated, isStale } from '$stores/market';
+  import { nextRefreshIn } from '$stores/refresh';
   import SymbolSearch from './SymbolSearch.svelte';
 
   const navLinks = [

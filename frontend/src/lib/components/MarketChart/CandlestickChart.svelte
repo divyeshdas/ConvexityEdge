@@ -131,13 +131,16 @@
     }, true);
   }
 
-  onMount(async () => {
-    const echarts = (await import('echarts')).default;
-    chart = echarts.init(chartEl, null, { renderer: 'canvas' });
-    const ro = new ResizeObserver(() => chart.resize());
-    ro.observe(chartEl);
-    await loadData();
-    return () => { ro.disconnect(); chart.dispose(); };
+  onMount(() => {
+    let ro: ResizeObserver;
+    (async () => {
+      const echarts = await import('echarts');
+      chart = echarts.init(chartEl, null, { renderer: 'canvas' });
+      ro = new ResizeObserver(() => chart.resize());
+      ro.observe(chartEl);
+      await loadData();
+    })();
+    return () => { if (ro) ro.disconnect(); if (chart) chart.dispose(); };
   });
 
   $: if (symbol) loadData();

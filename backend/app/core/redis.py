@@ -1,21 +1,27 @@
 import redis.asyncio as aioredis
+from redis.exceptions import ConnectionError as RedisConnectionError, RedisError
 from app.core.config import settings
 import hashlib
 import json
 import orjson
+import logging
 from typing import Any, Optional
 
+logger = logging.getLogger(__name__)
 
 _redis_client: Optional[aioredis.Redis] = None
+_redis_available: bool = True   # flips to False on first connection failure
 
 
-async def get_redis() -> aioredis.Redis:
+async def get_redis() -> Optional[aioredis.Redis]:
     global _redis_client
     if _redis_client is None:
         _redis_client = aioredis.from_url(
             settings.redis_url,
             encoding="utf-8",
             decode_responses=True,
+            socket_connect_timeout=1,
+            socket_timeout=1,
         )
     return _redis_client
 
@@ -34,19 +40,34 @@ def make_cache_key(prefix: str, **kwargs) -> str:
 
 
 async def cache_get(key: str) -> Optional[Any]:
-    r = await get_redis()
-    val = await r.get(key)
-    if val is None:
+    """Return cached value or None — never raises, Redis failure = cache miss."""
+    try:
+        r = await get_redis()
+        val = await r.get(key)
+        if val is None:
+            return None
+        return orjson.loads(val)
+    except (RedisConnectionError, RedisError, OSError):
         return None
-    return orjson.loads(val)
+    except Exception:
+        return None
 
 
 async def cache_set(key: str, value: Any, ttl: int = None) -> None:
-    r = await get_redis()
-    ttl = ttl or settings.cache_ttl
-    await r.setex(key, ttl, orjson.dumps(value))
+    """Write to cache — silently swallows Redis errors."""
+    try:
+        r = await get_redis()
+        ttl = ttl or settings.cache_ttl
+        await r.setex(key, ttl, orjson.dumps(value))
+    except (RedisConnectionError, RedisError, OSError):
+        pass
+    except Exception:
+        pass
 
 
 async def cache_delete(key: str) -> None:
-    r = await get_redis()
-    await r.delete(key)
+    try:
+        r = await get_redis()
+        await r.delete(key)
+    except Exception:
+        pass

@@ -27,7 +27,10 @@ async def lifespan(app: FastAPI):
     from app.core.redis import get_redis
     from data.pipeline import run_refresh_loop
 
-    redis = await get_redis()
+    try:
+        redis = await get_redis()
+    except Exception:
+        redis = None
     refresh_task = asyncio.create_task(
         run_refresh_loop(AsyncSessionLocal, redis)
     )
