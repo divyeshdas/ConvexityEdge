@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" fill="#0D0F14" rx="4"/>
+  <!-- Convexity curve -->
+  <path d="M6 24 Q10 8 16 12 Q22 16 26 8" stroke="#3B82F6" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <!-- CE letters -->
+  <text x="16" y="28" text-anchor="middle" fill="#3B82F6" font-family="monospace" font-size="8" font-weight="bold">CE</text>
+</svg>
