@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
+  import { browser } from '$app/environment';
   import { selectedSymbol, selectedExpiry, expiries, optionChain, quote, isLoading, isStale, lastUpdated, strikeCount } from '$stores/market';
   import { startRefreshTimer, stopRefreshTimer } from '$stores/refresh';
   import { marketApi, optionsApi } from '$api/client';
@@ -46,15 +47,15 @@
     }
   }
 
-  // Re-load when symbol or expiry changes
+  // Re-load when symbol or expiry changes (browser-only — no SSR fetch)
   let prevSymbol = '';
-  $: if ($selectedSymbol && $selectedSymbol !== prevSymbol) {
+  $: if (browser && $selectedSymbol && $selectedSymbol !== prevSymbol) {
     prevSymbol = $selectedSymbol;
     selectedExpiry.set('');
     loadExpiries($selectedSymbol);
   }
 
-  $: if ($selectedExpiry) {
+  $: if (browser && $selectedExpiry) {
     loadChain();
   }
 
