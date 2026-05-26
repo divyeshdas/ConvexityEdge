@@ -8,9 +8,28 @@ Runs in an async thread pool to avoid blocking the FastAPI event loop
 
 import asyncio
 import datetime
+import math
 from typing import Optional
 import yfinance as yf
 import pandas as pd
+
+
+def _fi(val, default: int = 0) -> int:
+    """float-safe int: returns default for NaN/None/inf."""
+    try:
+        v = float(val)
+        return default if (math.isnan(v) or math.isinf(v)) else int(v)
+    except (TypeError, ValueError):
+        return default
+
+
+def _ff(val, default: float = 0.0) -> float:
+    """float-safe float: returns default for NaN/None/inf."""
+    try:
+        v = float(val)
+        return default if (math.isnan(v) or math.isinf(v)) else v
+    except (TypeError, ValueError):
+        return default
 
 from data.providers.base import (
     MarketDataProvider,
@@ -80,11 +99,11 @@ class YFinanceProvider(MarketDataProvider):
                     dt = datetime.datetime.utcfromtimestamp(ts)
                 bars.append(OHLCBar(
                     time=dt,
-                    open=float(row["Open"]),
-                    high=float(row["High"]),
-                    low=float(row["Low"]),
-                    close=float(row["Close"]),
-                    volume=int(row["Volume"]),
+                    open=_ff(row["Open"]),
+                    high=_ff(row["High"]),
+                    low=_ff(row["Low"]),
+                    close=_ff(row["Close"]),
+                    volume=_fi(row["Volume"]),
                 ))
             return bars
 
@@ -113,17 +132,18 @@ class YFinanceProvider(MarketDataProvider):
 
             def _parse(df: pd.DataFrame, option_type: str):
                 for _, row in df.iterrows():
+                    iv = _ff(row.get("impliedVolatility"))
                     contracts.append(OptionContractData(
                         symbol=symbol.upper(),
                         option_type=option_type,
-                        strike=float(row.get("strike", 0)),
+                        strike=_ff(row.get("strike")),
                         expiry=expiry,
-                        bid=float(row.get("bid", 0) or 0),
-                        ask=float(row.get("ask", 0) or 0),
-                        last=float(row.get("lastPrice", 0) or 0),
-                        volume=int(row.get("volume", 0) or 0),
-                        open_interest=int(row.get("openInterest", 0) or 0),
-                        implied_vol=float(row.get("impliedVolatility", 0) or 0) or None,
+                        bid=_ff(row.get("bid")),
+                        ask=_ff(row.get("ask")),
+                        last=_ff(row.get("lastPrice")),
+                        volume=_fi(row.get("volume")),
+                        open_interest=_fi(row.get("openInterest")),
+                        implied_vol=iv if iv > 0 else None,
                     ))
 
             _parse(chain.calls, "C")
