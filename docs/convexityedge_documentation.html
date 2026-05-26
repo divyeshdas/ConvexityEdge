@@ -1,0 +1,1508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ConvexityEdge — Technical Documentation</title>
+<style>
+  /* ── Fonts & Reset ───────────────────────────────────────────── */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0D0F14;
+    --surface:   #13161E;
+    --panel:     #1A1D27;
+    --border:    #252836;
+    --muted:     #2E3245;
+    --accent:    #3B82F6;
+    --up:        #22C55E;
+    --down:      #EF4444;
+    --warning:   #F59E0B;
+    --neutral:   #94A3B8;
+    --slate300:  #CBD5E1;
+    --slate400:  #94A3B8;
+    --slate500:  #64748B;
+    --white:     #F1F5F9;
+    --delta:     #60A5FA;
+    --gamma:     #34D399;
+    --vega:      #A78BFA;
+    --theta:     #F87171;
+  }
+
+  html { font-size: 10pt; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #ffffff;
+    color: #1e293b;
+    line-height: 1.65;
+  }
+
+  /* ── Page layout ─────────────────────────────────────────────── */
+  @page {
+    size: A4;
+    margin: 18mm 20mm 18mm 20mm;
+    @bottom-center {
+      content: "ConvexityEdge Technical Documentation  ·  Page " counter(page) " of " counter(pages);
+      font-family: 'Inter', sans-serif;
+      font-size: 7pt;
+      color: #94a3b8;
+    }
+  }
+  @page cover { margin: 0; @bottom-center { content: ""; } }
+  @page toc   { @bottom-center { content: ""; } }
+
+  /* ── Cover page ──────────────────────────────────────────────── */
+  .cover {
+    page: cover;
+    width: 210mm;
+    height: 297mm;
+    background: #0D0F14;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #F1F5F9;
+    page-break-after: always;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(59,130,246,0.07) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59,130,246,0.07) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+  .cover-glow {
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(59,130,246,0.18) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .cover-inner { position: relative; z-index: 2; text-align: center; padding: 0 40px; }
+  .cover-logo {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13pt;
+    font-weight: 600;
+    color: #3B82F6;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .cover-title {
+    font-size: 36pt;
+    font-weight: 800;
+    color: #F1F5F9;
+    line-height: 1.15;
+    margin-bottom: 10px;
+    letter-spacing: -0.02em;
+  }
+  .cover-title span { color: #3B82F6; }
+  .cover-sub {
+    font-size: 13pt;
+    color: #64748B;
+    font-weight: 400;
+    margin-bottom: 48px;
+    letter-spacing: 0.01em;
+  }
+  .cover-divider {
+    width: 80px; height: 2px;
+    background: linear-gradient(90deg, transparent, #3B82F6, transparent);
+    margin: 0 auto 40px;
+  }
+  .cover-meta {
+    display: flex; gap: 32px; justify-content: center;
+    font-size: 9pt; color: #475569;
+  }
+  .cover-meta-item { display: flex; flex-direction: column; gap: 3px; align-items: center; }
+  .cover-meta-label { font-size: 7pt; text-transform: uppercase; letter-spacing: 0.1em; color: #334155; }
+  .cover-meta-value { color: #94A3B8; font-family: 'JetBrains Mono', monospace; font-size: 9pt; }
+  .cover-footer {
+    position: absolute; bottom: 28px; left: 0; right: 0;
+    text-align: center; font-size: 8pt; color: #1e293b44;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .cover-tags {
+    display: flex; gap: 10px; justify-content: center; margin-bottom: 40px; flex-wrap: wrap;
+  }
+  .cover-tag {
+    background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.25);
+    color: #60A5FA; font-size: 7.5pt; padding: 3px 10px;
+    font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em;
+  }
+
+  /* ── TOC ─────────────────────────────────────────────────────── */
+  .toc-page { page: toc; page-break-after: always; padding: 8mm 0; }
+  .toc-title {
+    font-size: 20pt; font-weight: 700; color: #0f172a;
+    border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 24px;
+  }
+  .toc-title span { color: #3B82F6; }
+  .toc-section { margin-bottom: 4px; }
+  .toc-entry {
+    display: flex; align-items: baseline;
+    font-size: 10pt; padding: 4px 0;
+  }
+  .toc-entry.sub { padding-left: 20px; font-size: 9.5pt; color: #475569; }
+  .toc-entry.sub2 { padding-left: 38px; font-size: 9pt; color: #64748b; }
+  .toc-num { color: #3B82F6; font-family: 'JetBrains Mono', monospace; font-size: 9pt; min-width: 32px; }
+  .toc-text { flex: 1; }
+  .toc-dots { flex: 1; border-bottom: 1px dotted #cbd5e1; margin: 0 6px; position: relative; top: -3px; }
+  .toc-page-num { font-family: 'JetBrains Mono', monospace; font-size: 9pt; color: #64748b; }
+
+  /* ── Chapter headers ─────────────────────────────────────────── */
+  .chapter {
+    page-break-before: always;
+    padding-top: 4mm;
+  }
+  .chapter:first-of-type { page-break-before: avoid; }
+
+  .chapter-label {
+    font-size: 8pt; font-weight: 600; color: #3B82F6;
+    text-transform: uppercase; letter-spacing: 0.15em;
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 6px;
+  }
+  h1.chapter-title {
+    font-size: 22pt; font-weight: 800; color: #0f172a;
+    line-height: 1.2; margin-bottom: 6px;
+    border-bottom: 3px solid #3B82F6; padding-bottom: 10px;
+  }
+  h1.chapter-title .accent { color: #3B82F6; }
+  .chapter-intro {
+    font-size: 10.5pt; color: #475569; margin: 12px 0 24px;
+    border-left: 3px solid #e2e8f0; padding-left: 12px;
+    font-style: italic;
+  }
+
+  h2 {
+    font-size: 14pt; font-weight: 700; color: #0f172a;
+    margin: 28px 0 10px; padding-bottom: 5px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  h2 .accent { color: #3B82F6; }
+
+  h3 {
+    font-size: 11pt; font-weight: 600; color: #1e293b;
+    margin: 20px 0 8px;
+  }
+  h3::before { content: "▸ "; color: #3B82F6; font-size: 9pt; }
+
+  h4 {
+    font-size: 10pt; font-weight: 600; color: #334155;
+    margin: 14px 0 6px;
+  }
+
+  p { margin-bottom: 10px; font-size: 10pt; color: #334155; }
+
+  /* ── Code blocks ─────────────────────────────────────────────── */
+  pre {
+    background: #0f172a; color: #e2e8f0;
+    padding: 12px 14px; margin: 12px 0;
+    border-radius: 4px; overflow-x: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8pt; line-height: 1.6;
+    border-left: 3px solid #3B82F6;
+    page-break-inside: avoid;
+  }
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8.5pt; background: #f1f5f9;
+    color: #1e3a5f; padding: 1px 5px;
+    border-radius: 3px;
+  }
+  pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+
+  /* syntax highlights */
+  .kw  { color: #818cf8; }
+  .fn  { color: #34d399; }
+  .st  { color: #fbbf24; }
+  .cm  { color: #64748b; font-style: italic; }
+  .nu  { color: #f97316; }
+  .tp  { color: #60a5fa; }
+
+  /* ── Tables ──────────────────────────────────────────────────── */
+  table {
+    width: 100%; border-collapse: collapse;
+    margin: 14px 0; font-size: 9.5pt;
+    page-break-inside: avoid;
+  }
+  thead th {
+    background: #1e293b; color: #94a3b8;
+    font-weight: 600; font-size: 8pt;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 8px 10px; text-align: left;
+    border-bottom: 2px solid #3B82F6;
+  }
+  tbody td {
+    padding: 7px 10px; border-bottom: 1px solid #e2e8f0;
+    color: #334155; vertical-align: top;
+  }
+  tbody tr:nth-child(even) td { background: #f8fafc; }
+  tbody tr:last-child td { border-bottom: none; }
+  td code { font-size: 8pt; }
+
+  /* ── Info boxes ──────────────────────────────────────────────── */
+  .box {
+    margin: 14px 0; padding: 12px 14px;
+    border-radius: 4px; font-size: 9.5pt;
+    page-break-inside: avoid;
+  }
+  .box-info    { background: #eff6ff; border-left: 3px solid #3B82F6; color: #1e3a5f; }
+  .box-math    { background: #f0fdf4; border-left: 3px solid #22C55E; color: #14532d; }
+  .box-warn    { background: #fffbeb; border-left: 3px solid #F59E0B; color: #78350f; }
+  .box-danger  { background: #fef2f2; border-left: 3px solid #EF4444; color: #7f1d1d; }
+  .box-title   { font-weight: 700; font-size: 9pt; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+  /* ── Math formulas ───────────────────────────────────────────── */
+  .math {
+    background: #0f172a; color: #e2e8f0;
+    padding: 14px 18px; margin: 12px 0;
+    border-radius: 4px; text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10pt; line-height: 2;
+    border: 1px solid #1e293b;
+    page-break-inside: avoid;
+  }
+  .math .highlight { color: #60a5fa; font-weight: 600; }
+  .math .op { color: #a5f3fc; }
+  .math .var { color: #fde68a; }
+
+  /* ── Inline badges ───────────────────────────────────────────── */
+  .badge {
+    display: inline-block; padding: 1px 7px;
+    border-radius: 3px; font-size: 7.5pt; font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.04em;
+    vertical-align: middle;
+  }
+  .badge-blue   { background: #dbeafe; color: #1d4ed8; }
+  .badge-green  { background: #dcfce7; color: #15803d; }
+  .badge-yellow { background: #fef3c7; color: #92400e; }
+  .badge-red    { background: #fee2e2; color: #b91c1c; }
+  .badge-purple { background: #ede9fe; color: #6d28d9; }
+
+  /* ── Lists ───────────────────────────────────────────────────── */
+  ul, ol { margin: 8px 0 10px 20px; }
+  li { margin-bottom: 4px; font-size: 10pt; color: #334155; }
+  li strong { color: #0f172a; }
+
+  /* ── Architecture diagram (text-based) ───────────────────────── */
+  .arch-diagram {
+    background: #0f172a; color: #94a3b8;
+    padding: 16px; margin: 14px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8pt; line-height: 1.8;
+    border-radius: 4px; border: 1px solid #1e293b;
+    page-break-inside: avoid;
+  }
+  .arch-diagram .box-label { color: #3B82F6; font-weight: 600; }
+  .arch-diagram .arrow     { color: #475569; }
+  .arch-diagram .layer     { color: #fbbf24; }
+  .arch-diagram .note      { color: #64748b; font-style: italic; }
+
+  /* ── Section separator ───────────────────────────────────────── */
+  .sep {
+    border: none; border-top: 1px solid #e2e8f0;
+    margin: 24px 0;
+  }
+
+  /* ── Two-column layout ───────────────────────────────────────── */
+  .two-col { display: flex; gap: 16px; margin: 12px 0; }
+  .col { flex: 1; }
+
+  /* ── Endpoint rows ───────────────────────────────────────────── */
+  .endpoint {
+    display: flex; align-items: baseline; gap: 10px;
+    padding: 8px 10px; border: 1px solid #e2e8f0;
+    margin-bottom: 6px; border-radius: 3px;
+    page-break-inside: avoid;
+  }
+  .endpoint:hover { background: #f8fafc; }
+  .method {
+    font-family: 'JetBrains Mono', monospace; font-size: 8pt;
+    font-weight: 700; padding: 2px 8px; border-radius: 3px; min-width: 40px; text-align: center;
+  }
+  .method-get  { background: #dcfce7; color: #15803d; }
+  .method-post { background: #dbeafe; color: #1d4ed8; }
+  .endpoint-path { font-family: 'JetBrains Mono', monospace; font-size: 9pt; color: #1e293b; flex: 1; }
+  .endpoint-desc { font-size: 9pt; color: #64748b; }
+
+  /* ── Strategy cards ──────────────────────────────────────────── */
+  .strategy-grid { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0; }
+  .strategy-card {
+    flex: 1 1 45%; border: 1px solid #e2e8f0;
+    padding: 10px 12px; border-radius: 4px;
+    page-break-inside: avoid;
+  }
+  .strategy-card-name { font-weight: 700; font-size: 10pt; color: #0f172a; margin-bottom: 4px; }
+  .strategy-card-legs { font-family: 'JetBrains Mono', monospace; font-size: 8pt; color: #475569; margin-bottom: 4px; }
+  .strategy-card-desc { font-size: 9pt; color: #64748b; }
+
+  /* ── Greek color chips ───────────────────────────────────────── */
+  .greek-delta  { color: #2563eb; font-weight: 600; }
+  .greek-gamma  { color: #15803d; font-weight: 600; }
+  .greek-vega   { color: #7c3aed; font-weight: 600; }
+  .greek-theta  { color: #dc2626; font-weight: 600; }
+  .greek-rho    { color: #b45309; font-weight: 600; }
+
+  /* ── Footer note ─────────────────────────────────────────────── */
+  .page-note {
+    margin-top: 32px; padding-top: 10px;
+    border-top: 1px solid #e2e8f0;
+    font-size: 8pt; color: #94a3b8;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════
+     COVER PAGE
+     ════════════════════════════════════════════════════════════ -->
+<div class="cover">
+  <div class="cover-grid"></div>
+  <div class="cover-glow"></div>
+  <div class="cover-inner">
+    <div class="cover-logo">ConvexityEdge</div>
+    <div class="cover-title">Technical<br/><span>Documentation</span></div>
+    <div class="cover-sub">Options Volatility Analytics Platform</div>
+    <div class="cover-divider"></div>
+    <div class="cover-tags">
+      <div class="cover-tag">Black-Scholes</div>
+      <div class="cover-tag">FastAPI</div>
+      <div class="cover-tag">SvelteKit</div>
+      <div class="cover-tag">IV Surface</div>
+      <div class="cover-tag">Greeks</div>
+      <div class="cover-tag">Strategy Builder</div>
+    </div>
+    <div class="cover-meta">
+      <div class="cover-meta-item">
+        <div class="cover-meta-label">Version</div>
+        <div class="cover-meta-value">1.0.0</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="cover-meta-label">Stack</div>
+        <div class="cover-meta-value">Python 3.14 · Node 22</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="cover-meta-label">Author</div>
+        <div class="cover-meta-value">Divyesh Das</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="cover-meta-label">Date</div>
+        <div class="cover-meta-value">May 2026</div>
+      </div>
+    </div>
+  </div>
+  <div class="cover-footer">github.com/divyeshdas/ConvexityEdge</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     TABLE OF CONTENTS
+     ════════════════════════════════════════════════════════════ -->
+<div class="toc-page">
+  <div class="toc-title">Table of <span>Contents</span></div>
+
+  <div class="toc-section">
+    <div class="toc-entry"><span class="toc-num">1</span><span class="toc-text">Project Overview</span><span class="toc-dots"></span><span class="toc-page-num">3</span></div>
+    <div class="toc-entry sub"><span class="toc-num">1.1</span><span class="toc-text">Purpose &amp; Goals</span><span class="toc-dots"></span><span class="toc-page-num">3</span></div>
+    <div class="toc-entry sub"><span class="toc-num">1.2</span><span class="toc-text">Technology Stack</span><span class="toc-dots"></span><span class="toc-page-num">3</span></div>
+    <div class="toc-entry sub"><span class="toc-num">1.3</span><span class="toc-text">System Architecture</span><span class="toc-dots"></span><span class="toc-page-num">4</span></div>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-entry"><span class="toc-num">2</span><span class="toc-text">Mathematical Foundation</span><span class="toc-dots"></span><span class="toc-page-num">5</span></div>
+    <div class="toc-entry sub"><span class="toc-num">2.1</span><span class="toc-text">Black-Scholes Model</span><span class="toc-dots"></span><span class="toc-page-num">5</span></div>
+    <div class="toc-entry sub"><span class="toc-num">2.2</span><span class="toc-text">The Greeks</span><span class="toc-dots"></span><span class="toc-page-num">6</span></div>
+    <div class="toc-entry sub"><span class="toc-num">2.3</span><span class="toc-text">Implied Volatility Solver</span><span class="toc-dots"></span><span class="toc-page-num">8</span></div>
+    <div class="toc-entry sub"><span class="toc-num">2.4</span><span class="toc-text">IV Surface Construction</span><span class="toc-dots"></span><span class="toc-page-num">9</span></div>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-entry"><span class="toc-num">3</span><span class="toc-text">Backend</span><span class="toc-dots"></span><span class="toc-page-num">10</span></div>
+    <div class="toc-entry sub"><span class="toc-num">3.1</span><span class="toc-text">Project Structure</span><span class="toc-dots"></span><span class="toc-page-num">10</span></div>
+    <div class="toc-entry sub"><span class="toc-num">3.2</span><span class="toc-text">FastAPI Application</span><span class="toc-dots"></span><span class="toc-page-num">11</span></div>
+    <div class="toc-entry sub"><span class="toc-num">3.3</span><span class="toc-text">Quant Engine</span><span class="toc-dots"></span><span class="toc-page-num">11</span></div>
+    <div class="toc-entry sub"><span class="toc-num">3.4</span><span class="toc-text">Data Pipeline</span><span class="toc-dots"></span><span class="toc-page-num">13</span></div>
+    <div class="toc-entry sub"><span class="toc-num">3.5</span><span class="toc-text">Strategy Builder</span><span class="toc-dots"></span><span class="toc-page-num">14</span></div>
+    <div class="toc-entry sub"><span class="toc-num">3.6</span><span class="toc-text">Trade Analysis</span><span class="toc-dots"></span><span class="toc-page-num">15</span></div>
+    <div class="toc-entry sub"><span class="toc-num">3.7</span><span class="toc-text">Database &amp; Caching</span><span class="toc-dots"></span><span class="toc-page-num">15</span></div>
+    <div class="toc-entry sub"><span class="toc-num">3.8</span><span class="toc-text">API Reference</span><span class="toc-dots"></span><span class="toc-page-num">16</span></div>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-entry"><span class="toc-num">4</span><span class="toc-text">Frontend</span><span class="toc-dots"></span><span class="toc-page-num">18</span></div>
+    <div class="toc-entry sub"><span class="toc-num">4.1</span><span class="toc-text">SvelteKit &amp; Project Structure</span><span class="toc-dots"></span><span class="toc-page-num">18</span></div>
+    <div class="toc-entry sub"><span class="toc-num">4.2</span><span class="toc-text">Reactive Stores</span><span class="toc-dots"></span><span class="toc-page-num">19</span></div>
+    <div class="toc-entry sub"><span class="toc-num">4.3</span><span class="toc-text">API Client Layer</span><span class="toc-dots"></span><span class="toc-page-num">19</span></div>
+    <div class="toc-entry sub"><span class="toc-num">4.4</span><span class="toc-text">Pages &amp; Components</span><span class="toc-dots"></span><span class="toc-page-num">20</span></div>
+    <div class="toc-entry sub"><span class="toc-num">4.5</span><span class="toc-text">Charts (ECharts)</span><span class="toc-dots"></span><span class="toc-page-num">22</span></div>
+    <div class="toc-entry sub"><span class="toc-num">4.6</span><span class="toc-text">Theme System</span><span class="toc-dots"></span><span class="toc-page-num">23</span></div>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-entry"><span class="toc-num">5</span><span class="toc-text">Infrastructure</span><span class="toc-dots"></span><span class="toc-page-num">24</span></div>
+    <div class="toc-entry sub"><span class="toc-num">5.1</span><span class="toc-text">Docker Compose</span><span class="toc-dots"></span><span class="toc-page-num">24</span></div>
+    <div class="toc-entry sub"><span class="toc-num">5.2</span><span class="toc-text">Database Schema</span><span class="toc-dots"></span><span class="toc-page-num">24</span></div>
+    <div class="toc-entry sub"><span class="toc-num">5.3</span><span class="toc-text">Redis Caching Strategy</span><span class="toc-dots"></span><span class="toc-page-num">25</span></div>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-entry"><span class="toc-num">6</span><span class="toc-text">Data Flow &amp; Request Lifecycle</span><span class="toc-dots"></span><span class="toc-page-num">26</span></div>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-entry"><span class="toc-num">7</span><span class="toc-text">Bugs Fixed &amp; Engineering Decisions</span><span class="toc-dots"></span><span class="toc-page-num">27</span></div>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-entry"><span class="toc-num">8</span><span class="toc-text">Performance &amp; Benchmarks</span><span class="toc-dots"></span><span class="toc-page-num">30</span></div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════
+     CHAPTER 1 — PROJECT OVERVIEW
+     ════════════════════════════════════════════════════════════ -->
+<div class="chapter">
+  <div class="chapter-label">Chapter 01</div>
+  <h1 class="chapter-title">Project <span class="accent">Overview</span></h1>
+  <p class="chapter-intro">ConvexityEdge is a professional-grade, full-stack options volatility analytics terminal inspired by Bloomberg Terminal and ThinkorSwim. It provides real-time implied volatility analysis, options chain visualization, strategy building, and trade planning — all powered by Black-Scholes pricing.</p>
+
+  <h2>1.1 Purpose &amp; Goals</h2>
+  <p>The platform is designed to give retail traders institutional-quality options analytics without a Bloomberg subscription. Every number displayed is computed from first principles using the Black-Scholes framework — no black-box vendor data for pricing.</p>
+
+  <table>
+    <thead><tr><th>Goal</th><th>Implementation</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>Real-time options chain with Greeks</td><td>yfinance + BS engine, 60s refresh</td><td><span class="badge badge-green">Done</span></td></tr>
+      <tr><td>IV Smile, Term Structure, 3D Surface</td><td>IV solver + ECharts / echarts-gl</td><td><span class="badge badge-green">Done</span></td></tr>
+      <tr><td>9-strategy payoff diagram builder</td><td>Analytical payoff + ECharts</td><td><span class="badge badge-green">Done</span></td></tr>
+      <tr><td>Trade analysis (Grid Reaper style)</td><td>Vol-floor scaling model</td><td><span class="badge badge-green">Done</span></td></tr>
+      <tr><td>Analytics dashboard</td><td>PCR, OI exposure, Greeks dashboard</td><td><span class="badge badge-green">Done</span></td></tr>
+      <tr><td>Auto dark/light mode by IST time</td><td>IST timezone store + Tailwind classes</td><td><span class="badge badge-green">Done</span></td></tr>
+      <tr><td>Full persistence layer</td><td>PostgreSQL + Redis (graceful degrade)</td><td><span class="badge badge-green">Done</span></td></tr>
+    </tbody>
+  </table>
+
+  <h2>1.2 Technology Stack</h2>
+
+  <div class="two-col">
+    <div class="col">
+      <h3>Backend</h3>
+      <table>
+        <thead><tr><th>Technology</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td><code>Python 3.14</code></td><td>Runtime</td></tr>
+          <tr><td><code>FastAPI 0.115</code></td><td>Async HTTP framework</td></tr>
+          <tr><td><code>NumPy / SciPy</code></td><td>Vectorized BS pricing</td></tr>
+          <tr><td><code>yfinance</code></td><td>Market data provider</td></tr>
+          <tr><td><code>SQLAlchemy async</code></td><td>ORM layer</td></tr>
+          <tr><td><code>asyncpg</code></td><td>PostgreSQL async driver</td></tr>
+          <tr><td><code>redis-py async</code></td><td>Cache layer</td></tr>
+          <tr><td><code>orjson</code></td><td>Fast JSON serialization</td></tr>
+          <tr><td><code>uvicorn</code></td><td>ASGI server</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="col">
+      <h3>Frontend</h3>
+      <table>
+        <thead><tr><th>Technology</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td><code>Svelte 5</code></td><td>UI component framework</td></tr>
+          <tr><td><code>SvelteKit 2</code></td><td>App framework + routing</td></tr>
+          <tr><td><code>TypeScript</code></td><td>Type safety</td></tr>
+          <tr><td><code>Tailwind CSS 3</code></td><td>Utility-first styling</td></tr>
+          <tr><td><code>Apache ECharts 5</code></td><td>Charts (canvas)</td></tr>
+          <tr><td><code>echarts-gl</code></td><td>3D surface (WebGL)</td></tr>
+          <tr><td><code>Vite 6</code></td><td>Build tool / dev server</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h2>1.3 System Architecture</h2>
+
+  <div class="arch-diagram">
+<span class="layer">┌─────────────────── Browser ───────────────────────────────────────┐</span>
+│                                                                       │
+│  <span class="box-label">SvelteKit SPA</span>  (Svelte 5 · Tailwind · ECharts · echarts-gl)          │
+│                                                                       │
+│  /chain      /strategy    /dashboard    /trade                        │
+│  Options     Strategy     Analytics     Trade                         │
+│  Chain       Builder      Dashboard     Analysis                      │
+│                                                                       │
+<span class="layer">└──────────────────── Vite Proxy /api → :8000 ──────────────────────┘</span>
+                              <span class="arrow">│</span>
+                              <span class="arrow">▼  HTTP REST</span>
+<span class="layer">┌─────────────────── FastAPI (port 8000) ───────────────────────────┐</span>
+│                                                                       │
+│  <span class="box-label">API Routes</span>:  /symbols  /market  /options  /pricing  /greeks         │
+│               /iv       /strategy /trade    /dashboard               │
+│                                                                       │
+│  <span class="box-label">Quant Engine</span>:  black_scholes · greeks · iv_solver · iv_surface       │
+│  <span class="box-label">Analytics</span>:     strategy_builder · trade_analysis · dashboard          │
+│  <span class="box-label">Data Layer</span>:    YFinanceProvider → enrich_chain() → cache               │
+│                                                                       │
+<span class="layer">└──────────┬──────────────────────────────────────┬──────────────────┘</span>
+           <span class="arrow">│</span>                                    <span class="arrow">│</span>
+           <span class="arrow">▼</span>                                    <span class="arrow">▼</span>
+<span class="box-label">PostgreSQL :5432</span>                        <span class="box-label">Redis :6379</span>
+Symbols, Contracts,                     Chain cache (TTL 55s)
+IV History, Strategies                  Quote cache (TTL 30s)
+                                        <span class="note">(graceful degrade if unavailable)</span>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════
+     CHAPTER 2 — MATHEMATICAL FOUNDATION
+     ════════════════════════════════════════════════════════════ -->
+<div class="chapter">
+  <div class="chapter-label">Chapter 02</div>
+  <h1 class="chapter-title">Mathematical <span class="accent">Foundation</span></h1>
+  <p class="chapter-intro">All pricing in ConvexityEdge is based purely on the Black-Scholes-Merton model for European options. No stochastic volatility (Heston), no stochastic interest rates (Vasicek/CIR). This section explains every formula used, from first principles.</p>
+
+  <h2>2.1 Black-Scholes Model</h2>
+
+  <h3>Inputs</h3>
+  <table>
+    <thead><tr><th>Symbol</th><th>Name</th><th>Typical Value</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><code>S</code></td><td>Spot price</td><td>Market price</td><td>Current underlying price</td></tr>
+      <tr><td><code>K</code></td><td>Strike price</td><td>Option contract</td><td>The agreed exercise price</td></tr>
+      <tr><td><code>T</code></td><td>Time to expiry</td><td>DTE / 365</td><td>Expressed in years</td></tr>
+      <tr><td><code>r</code></td><td>Risk-free rate</td><td>~0.053 (5.3%)</td><td>US 10-year treasury yield</td></tr>
+      <tr><td><code>q</code></td><td>Dividend yield</td><td>~0.013 for SPY</td><td>Continuous dividend yield</td></tr>
+      <tr><td><code>σ</code></td><td>Volatility</td><td>0.15–0.80</td><td>Annualized implied volatility</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Intermediate Values (d1 and d2)</h3>
+  <div class="math">
+    <span class="var">d₁</span> <span class="op">=</span> <span class="highlight">[ ln(S/K) + (r − q + σ²/2)·T ]</span> <span class="op">/</span> <span class="highlight">( σ·√T )</span>
+    <br/>
+    <span class="var">d₂</span> <span class="op">=</span> <span class="var">d₁</span> <span class="op">−</span> <span class="highlight">σ·√T</span>
+  </div>
+
+  <p><code>ln(S/K)</code> is the <strong>log-moneyness</strong> — positive for ITM calls, negative for OTM calls. <code>σ·√T</code> is the expected one-standard-deviation move over the option's life. <code>N(d₂)</code> is the risk-neutral probability that the option expires in-the-money.</p>
+
+  <h3>Option Prices</h3>
+  <div class="math">
+    <span class="highlight">Call</span><span class="op"> = </span><span class="var">S·e<sup>−qT</sup>·N(d₁)</span><span class="op"> − </span><span class="var">K·e<sup>−rT</sup>·N(d₂)</span>
+    <br/>
+    <span class="highlight">Put</span><span class="op">  = </span><span class="var">K·e<sup>−rT</sup>·N(−d₂)</span><span class="op"> − </span><span class="var">S·e<sup>−qT</sup>·N(−d₁)</span>
+  </div>
+
+  <p><code>N(x)</code> is the standard normal cumulative distribution function — the probability that a draw from N(0,1) is ≤ x. Implemented as <code>scipy.stats.norm.cdf(x)</code>. The exponential discount factors <code>e^(-rT)</code> and <code>e^(-qT)</code> account for the time value of money and foregone dividends.</p>
+
+  <div class="box box-math">
+    <div class="box-title">Put-Call Parity Check</div>
+    <code>C − P = S·e<sup>−qT</sup> − K·e<sup>−rT</sup></code><br/>
+    This relationship must hold for any arbitrage-free market. The backend validates this for all computed prices.
+  </div>
+
+  <h3>Vectorized Batch Pricing</h3>
+  <p>For pricing an entire options chain (300+ contracts), the engine uses NumPy to compute all prices simultaneously rather than looping:</p>
+  <pre><code><span class="kw">def</span> <span class="fn">bs_price_batch</span>(S, K_arr, T_arr, r, q, sigma_arr, types):
+    <span class="cm"># All arrays — NumPy vectorizes across all 300+ contracts at once</span>
+    d1 = (np.log(S/K_arr) + (r - q + <span class="nu">0.5</span>*sigma_arr**<span class="nu">2</span>)*T_arr) / (sigma_arr*np.sqrt(T_arr))
+    d2 = d1 - sigma_arr * np.sqrt(T_arr)
+    call_px = S*np.exp(-q*T_arr)*norm.cdf(d1) - K_arr*np.exp(-r*T_arr)*norm.cdf(d2)
+    put_px  = K_arr*np.exp(-r*T_arr)*norm.cdf(-d2) - S*np.exp(-q*T_arr)*norm.cdf(-d1)
+    <span class="kw">return</span> np.where(types == <span class="st">'C'</span>, call_px, put_px)</code></pre>
+  <p><strong>Performance:</strong> 10,000 contracts priced in ~4ms — well within the 2,000ms target.</p>
+
+  <h2>2.2 The Greeks</h2>
+  <p>Greeks measure the sensitivity of option price to changes in each input. All are computed analytically (exact closed-form derivatives), not numerically (bumping inputs). Analytical Greeks are faster, exact, and have no finite-difference error.</p>
+
+  <h3><span class="greek-delta">Delta (Δ)</span> — Price Sensitivity</h3>
+  <div class="math">
+    <span class="highlight">Call Δ</span> <span class="op">= e<sup>−qT</sup>·N(d₁)</span> <span class="op">∈ [0, 1]</span>
+    <br/>
+    <span class="highlight">Put Δ</span> <span class="op">= −e<sup>−qT</sup>·N(−d₁)</span> <span class="op">∈ [−1, 0]</span>
+  </div>
+  <p>Delta tells you: if the stock moves $1, how much does the option price move? An ATM call has Δ ≈ 0.50. A deep ITM call has Δ ≈ 1.0 (moves dollar-for-dollar). Delta is also the hedge ratio — short 0.5 shares to delta-hedge one long ATM call.</p>
+
+  <h3><span class="greek-gamma">Gamma (Γ)</span> — Delta Sensitivity</h3>
+  <div class="math">
+    <span class="highlight">Γ</span> <span class="op">= e<sup>−qT</sup>·φ(d₁)</span> <span class="op">/</span> <span class="highlight">( S·σ·√T )</span>
+    <span class="op">  [same for calls and puts]</span>
+  </div>
+  <p><code>φ(x)</code> is the standard normal PDF. Gamma peaks at-the-money and near expiry — this is where delta changes fastest and delta-hedging requires the most frequent rebalancing. High gamma = dangerous near expiry.</p>
+
+  <h3><span class="greek-vega">Vega (ν)</span> — Volatility Sensitivity</h3>
+  <div class="math">
+    <span class="highlight">ν</span> <span class="op">= S·e<sup>−qT</sup>·φ(d₁)·√T</span> <span class="op">/</span> <span class="highlight">100</span>
+    <span class="op">  [per 1% change in IV, same for calls and puts]</span>
+  </div>
+  <p>Vega is largest for ATM options and long-dated options. The ÷100 makes it readable: "option price changes by $0.12 per 1% move in IV." Selling premium = short vega (you lose when IV spikes).</p>
+
+  <h3><span class="greek-theta">Theta (Θ)</span> — Time Decay</h3>
+  <div class="math">
+    <span class="highlight">Θ_call</span> <span class="op">=</span> <span class="op">[ −S·e<sup>−qT</sup>·φ(d₁)·σ/(2√T) − r·K·e<sup>−rT</sup>·N(d₂) + q·S·e<sup>−qT</sup>·N(d₁) ]</span> <span class="op">/ 365</span>
+  </div>
+  <p>Theta is always negative for long options — you lose time value every day. It accelerates as expiry approaches. Theta and Gamma are a trade-off: high gamma (good for long gamma scalpers) comes with high negative theta (you pay for it daily).</p>
+
+  <h3><span class="greek-rho">Rho (ρ)</span> — Interest Rate Sensitivity</h3>
+  <div class="math">
+    <span class="highlight">ρ_call</span> <span class="op">= K·T·e<sup>−rT</sup>·N(d₂) / 100</span>
+    <br/>
+    <span class="highlight">ρ_put</span> <span class="op">= −K·T·e<sup>−rT</sup>·N(−d₂) / 100</span>
+  </div>
+  <p>Rho is the least important Greek for short-dated options. For long-dated LEAPS, a 1% rate change can meaningfully affect call prices.</p>
+
+  <h2>2.3 Implied Volatility Solver</h2>
+
+  <p>Implied volatility (IV) is the <em>reverse problem</em>: given an observed market price, what σ would Black-Scholes need to produce that price? There is no algebraic inverse — we must search numerically.</p>
+
+  <h3>Initial Guess (Brenner-Subrahmanyam Approximation)</h3>
+  <div class="math">
+    <span class="highlight">σ₀</span> <span class="op">≈ √(2π/T) · (C / S)</span>
+  </div>
+  <p>This approximation is accurate for ATM options and places the starting point close to the solution, reducing the number of iterations needed.</p>
+
+  <h3>Newton-Raphson Method (Primary)</h3>
+  <div class="math">
+    <span class="highlight">σ_{n+1}</span> <span class="op">=</span> <span class="var">σ_n</span> <span class="op">−</span> <span class="highlight">( BS(σ_n) − Market Price ) / Vega(σ_n)</span>
+  </div>
+  <p>Newton's method converges quadratically near the root — typically 3–5 iterations. It fails when Vega is near zero (deep ITM or OTM options where the price is nearly all intrinsic value).</p>
+
+  <pre><code><span class="kw">def</span> <span class="fn">solve_iv_newton</span>(market_price, S, K, T, r, q, option_type, max_iter=<span class="nu">50</span>):
+    sigma = sqrt(<span class="nu">2</span>*pi/T) * (market_price/S)   <span class="cm"># Brenner-Subrahmanyam guess</span>
+    <span class="kw">for</span> _ <span class="kw">in</span> range(max_iter):
+        price = bs_price(S, K, T, r, q, sigma, option_type)
+        vega  = bs_vega(S, K, T, r, q, sigma)
+        diff  = price - market_price
+        <span class="kw">if</span> abs(diff) < <span class="nu">1e-8</span>: <span class="kw">return</span> sigma   <span class="cm"># converged</span>
+        <span class="kw">if</span> abs(vega) < <span class="nu">1e-10</span>: <span class="kw">raise</span> ValueError(<span class="st">"vega too small"</span>)
+        sigma -= diff / vega
+        sigma = max(<span class="nu">0.001</span>, min(sigma, <span class="nu">10.0</span>))   <span class="cm"># clamp to [0.1%, 1000%]</span>
+    <span class="kw">raise</span> ValueError(<span class="st">"did not converge"</span>)</code></pre>
+
+  <h3>Brent's Method (Fallback)</h3>
+  <p>Brent's method is a hybrid of bisection, secant, and inverse quadratic interpolation. It guarantees convergence as long as a bracket exists (i.e., the function changes sign over <code>[σ_lo, σ_hi]</code>). We bracket <code>[0.001, 10.0]</code>. It is slower than Newton but never fails.</p>
+
+  <div class="box box-info">
+    <div class="box-title">IV Solver Strategy</div>
+    <strong>Primary:</strong> Newton-Raphson (fast, 3–5 iters) → <strong>Fallback:</strong> Brent's method (slow, guaranteed). The solver chain automatically falls back on any exception (zero vega, non-convergence, numerical overflow).
+  </div>
+
+  <h2>2.4 IV Surface Construction</h2>
+
+  <h3>IV Smile</h3>
+  <p>Plot IV vs. strike for a single expiry. Calls and puts are plotted separately. In real markets, the smile is not flat — deep OTM puts are more expensive than calls (negative skew) because of crash fear.</p>
+
+  <h3>IV Term Structure</h3>
+  <p>Plot ATM IV vs. DTE across all available expirations. Normal markets show upward-sloping term structure (more uncertainty further out). Inverted term structure (front month IV > back month) signals a near-term event risk (earnings, FOMC).</p>
+
+  <h3>IV Rank</h3>
+  <div class="math">
+    <span class="highlight">IV Rank</span> <span class="op">=</span> <span class="var">( Current IV − 52-week Low )</span> <span class="op">/</span> <span class="var">( 52-week High − 52-week Low )</span> <span class="op">× 100</span>
+  </div>
+  <p>A rank of 80 means IV is in the 80th percentile of its past year. High IV Rank is favourable for selling premium (straddles, iron condors). Low IV Rank favours buying options.</p>
+
+  <h3>3D IV Surface</h3>
+  <p>A 2D grid of (strike, DTE) with IV as the Z-axis. Built by running the IV solver for every contract in the chain, then rendering with echarts-gl's WebGL surface series. The colour map goes from deep blue (low IV) through yellow to red (high IV).</p>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════
+     CHAPTER 3 — BACKEND
+     ════════════════════════════════════════════════════════════ -->
+<div class="chapter">
+  <div class="chapter-label">Chapter 03</div>
+  <h1 class="chapter-title">Backend <span class="accent">Architecture</span></h1>
+  <p class="chapter-intro">The backend is a Python FastAPI application with a fully async architecture. It separates concerns into a quant engine (pure math), analytics layer, data pipeline, and API layer.</p>
+
+  <h2>3.1 Project Structure</h2>
+  <pre><code>backend/
+├── app/
+│   ├── main.py              <span class="cm"># FastAPI app, lifespan, CORS, ORJSON</span>
+│   ├── core/
+│   │   ├── config.py        <span class="cm"># Pydantic settings (env vars)</span>
+│   │   ├── database.py      <span class="cm"># SQLAlchemy async engine</span>
+│   │   └── redis.py         <span class="cm"># Redis client + graceful degrade helpers</span>
+│   ├── api/v1/routes/
+│   │   ├── symbols.py       <span class="cm"># GET /symbols/search</span>
+│   │   ├── market.py        <span class="cm"># GET /market/quote, /market/chart</span>
+│   │   ├── options.py       <span class="cm"># GET /options/expiries, /options/chain</span>
+│   │   ├── pricing.py       <span class="cm"># POST /pricing/black-scholes</span>
+│   │   ├── greeks.py        <span class="cm"># POST /greeks/calculate</span>
+│   │   ├── iv.py            <span class="cm"># GET /iv/smile, /iv/term-structure, /iv/surface</span>
+│   │   ├── strategy.py      <span class="cm"># POST /strategy/build, /strategy/payoff</span>
+│   │   ├── trade.py         <span class="cm"># POST /trade/analyze</span>
+│   │   └── dashboard.py     <span class="cm"># GET /dashboard/analytics/{symbol}</span>
+│   └── models/              <span class="cm"># SQLAlchemy ORM models</span>
+├── quant_engine/
+│   ├── black_scholes.py     <span class="cm"># bs_price, bs_price_batch</span>
+│   ├── greeks.py            <span class="cm"># calculate_greeks (vectorized)</span>
+│   ├── iv_solver.py         <span class="cm"># Newton-Raphson + Brent</span>
+│   └── iv_surface.py        <span class="cm"># smile, term structure, 3D surface</span>
+├── analytics/
+│   ├── strategy_builder.py  <span class="cm"># 9 strategy templates + payoff</span>
+│   ├── trade_analysis.py    <span class="cm"># vol-floor scaling model</span>
+│   └── dashboard_analytics.py
+├── data/
+│   ├── providers/
+│   │   ├── base.py          <span class="cm"># Abstract MarketDataProvider</span>
+│   │   └── yfinance_provider.py
+│   └── pipeline.py          <span class="cm"># enrich_chain, run_refresh_loop</span></code></pre>
+
+  <h2>3.2 FastAPI Application</h2>
+
+  <h3>Lifespan Context Manager</h3>
+  <p>FastAPI's <code>lifespan</code> replaces the deprecated <code>@app.on_event</code> startup/shutdown hooks. It uses an <code>async with</code> context manager — code before <code>yield</code> runs at startup, after <code>yield</code> at shutdown.</p>
+
+  <pre><code><span class="kw">@asynccontextmanager</span>
+<span class="kw">async def</span> <span class="fn">lifespan</span>(app: FastAPI):
+    logger.info(<span class="st">"ConvexityEdge backend starting..."</span>)
+    asyncio.create_task(run_refresh_loop())   <span class="cm"># start 60s background refresh</span>
+    <span class="kw">try</span>:
+        <span class="kw">await</span> get_redis()                    <span class="cm"># warm up Redis connection</span>
+    <span class="kw">except</span> Exception:
+        logger.warning(<span class="st">"Redis unavailable — running without cache"</span>)
+    <span class="kw">yield</span>                                    <span class="cm"># app is now serving requests</span>
+    <span class="cm"># shutdown cleanup happens here</span></code></pre>
+
+  <h3>ORJSON Responses</h3>
+  <p>All endpoints use <code>ORJSONResponse</code> instead of the default JSON response. ORJSON is 2–10× faster than Python's stdlib <code>json</code> module and natively handles NumPy arrays, datetime objects, and Decimal types.</p>
+
+  <h2>3.3 Quant Engine</h2>
+
+  <h3>black_scholes.py</h3>
+  <table>
+    <thead><tr><th>Function</th><th>Inputs</th><th>Output</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><code>_d1_d2()</code></td><td>S, K, T, r, q, σ</td><td>(d1, d2)</td><td>Private, used internally</td></tr>
+      <tr><td><code>bs_price()</code></td><td>S, K, T, r, q, σ, type</td><td>float</td><td>Single option</td></tr>
+      <tr><td><code>bs_price_with_decomposition()</code></td><td>same</td><td>dict</td><td>Price + intrinsic + time value</td></tr>
+      <tr><td><code>bs_price_batch()</code></td><td>S, K_arr, T_arr, σ_arr</td><td>np.ndarray</td><td>Vectorized, entire chain</td></tr>
+    </tbody>
+  </table>
+
+  <h3>greeks.py</h3>
+  <table>
+    <thead><tr><th>Function</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>calculate_greeks(S, K, T, r, q, σ, type)</code></td><td>Returns full Greeks dict for one option</td></tr>
+      <tr><td><code>greeks_scalar()</code></td><td>Same, returns Pydantic model</td></tr>
+      <tr><td><code>greeks_batch(S, K_arr, T_arr, σ_arr, types)</code></td><td>Vectorized — all Greeks for entire chain</td></tr>
+    </tbody>
+  </table>
+
+  <h3>iv_solver.py</h3>
+  <pre><code><span class="cm"># Solver chain: Newton-Raphson first, Brent as fallback</span>
+<span class="kw">def</span> <span class="fn">solve_iv</span>(market_price, S, K, T, r, q, option_type) -> <span class="tp">float</span> | <span class="tp">None</span>:
+    <span class="kw">if</span> market_price <= <span class="nu">0</span> <span class="kw">or</span> T <= <span class="nu">0</span>:
+        <span class="kw">return None</span>
+    <span class="kw">try</span>:
+        <span class="kw">return</span> solve_iv_newton(market_price, S, K, T, r, q, option_type)
+    <span class="kw">except</span> Exception:
+        <span class="kw">try</span>:
+            <span class="kw">return</span> _solve_brent(market_price, S, K, T, r, q, option_type)
+        <span class="kw">except</span> Exception:
+            <span class="kw">return None</span>   <span class="cm"># deep ITM/OTM with no market price</span></code></pre>
+
+  <h2>3.4 Data Pipeline</h2>
+
+  <h3>Market Data Provider (Abstract Pattern)</h3>
+  <p>The <code>MarketDataProvider</code> abstract base class defines the contract for all data sources. <code>YFinanceProvider</code> implements it using yfinance. Switching to a live data source (Polygon.io, Alpaca, IBKR) only requires writing a new provider class.</p>
+
+  <pre><code><span class="kw">class</span> <span class="tp">MarketDataProvider</span>(ABC):
+    <span class="kw">@abstractmethod</span>
+    <span class="kw">async def</span> <span class="fn">get_quote</span>(self, symbol: <span class="tp">str</span>) -> <span class="tp">QuoteData</span>: ...
+    <span class="kw">@abstractmethod</span>
+    <span class="kw">async def</span> <span class="fn">get_option_chain</span>(self, symbol: <span class="tp">str</span>, expiry: date) -> <span class="tp">list[OptionContractData]</span>: ...</code></pre>
+
+  <h3>yfinance Thread Pool Pattern</h3>
+  <p>yfinance makes synchronous HTTP requests. Running these directly in FastAPI's async event loop would <em>block</em> it, preventing other requests from being served. The solution is to run yfinance in a thread pool:</p>
+
+  <pre><code><span class="kw">async def</span> <span class="fn">get_option_chain</span>(self, symbol, expiry):
+    <span class="kw">def</span> <span class="fn">_fetch</span>():          <span class="cm"># synchronous — runs in thread</span>
+        ticker = yf.Ticker(symbol)
+        chain  = ticker.option_chain(expiry.isoformat())
+        <span class="cm"># parse calls and puts ...</span>
+    loop = asyncio.get_event_loop()
+    <span class="kw">return await</span> loop.run_in_executor(<span class="tp">None</span>, _fetch)  <span class="cm"># non-blocking</span></code></pre>
+
+  <h3>NaN-Safe Field Parsing</h3>
+  <p>yfinance often returns <code>float('nan')</code> for missing fields (no trades, zero volume). <code>nan</code> is truthy in Python, so <code>nan or 0</code> returns <code>nan</code>, and <code>int(nan)</code> raises <code>ValueError</code>. The <code>_fi()</code> / <code>_ff()</code> helpers handle this:</p>
+
+  <pre><code><span class="kw">def</span> <span class="fn">_fi</span>(val, default=<span class="nu">0</span>) -> <span class="tp">int</span>:
+    <span class="kw">try</span>:
+        v = <span class="tp">float</span>(val)
+        <span class="kw">return</span> default <span class="kw">if</span> (math.isnan(v) <span class="kw">or</span> math.isinf(v)) <span class="kw">else</span> <span class="tp">int</span>(v)
+    <span class="kw">except</span> (TypeError, ValueError):
+        <span class="kw">return</span> default</code></pre>
+
+  <h3>Chain Enrichment</h3>
+  <p>After fetching raw contract data from yfinance, <code>enrich_chain()</code> runs the full quant pipeline:</p>
+  <ol>
+    <li>Solve IV for each contract using market bid/ask midpoint</li>
+    <li>Compute all five Greeks analytically</li>
+    <li>Mark ATM strike (closest to current spot price)</li>
+    <li>Compute chain statistics: ATM IV, HV-30d, PCR, OI exposure</li>
+    <li>Persist to PostgreSQL (if available)</li>
+    <li>Cache result in Redis with 55-second TTL</li>
+  </ol>
+
+  <h3>Background Refresh Loop</h3>
+  <pre><code><span class="kw">async def</span> <span class="fn">run_refresh_loop</span>():
+    <span class="kw">while True</span>:
+        <span class="kw">await</span> asyncio.sleep(<span class="nu">60</span>)
+        <span class="kw">for</span> symbol <span class="kw">in</span> WATCHED_SYMBOLS:
+            <span class="kw">await</span> refresh_symbol(symbol)   <span class="cm"># re-fetch + re-enrich + re-cache</span></code></pre>
+
+  <h2>3.5 Strategy Builder</h2>
+
+  <div class="strategy-grid">
+    <div class="strategy-card">
+      <div class="strategy-card-name">Long Call</div>
+      <div class="strategy-card-legs">+1 call @ ATM</div>
+      <div class="strategy-card-desc">Bullish. Unlimited upside, premium is max loss. Ideal when expecting a large up move.</div>
+    </div>
+    <div class="strategy-card">
+      <div class="strategy-card-name">Long Put</div>
+      <div class="strategy-card-legs">+1 put @ ATM</div>
+      <div class="strategy-card-desc">Bearish. Unlimited downside capture, premium is max loss. Hedge against long stock.</div>
+    </div>
+    <div class="strategy-card">
+      <div class="strategy-card-name">Bull Call Spread</div>
+      <div class="strategy-card-legs">+1 call ATM, −1 call OTM</div>
+      <div class="strategy-card-desc">Defined-risk bullish. Reduces cost vs naked call, caps upside at short strike.</div>
+    </div>
+    <div class="strategy-card">
+      <div class="strategy-card-name">Bear Put Spread</div>
+      <div class="strategy-card-legs">+1 put ATM, −1 put OTM</div>
+      <div class="strategy-card-desc">Defined-risk bearish. Cheaper than naked put, profit capped at short strike.</div>
+    </div>
+    <div class="strategy-card">
+      <div class="strategy-card-name">Straddle</div>
+      <div class="strategy-card-legs">+1 call ATM, +1 put ATM</div>
+      <div class="strategy-card-desc">Long volatility. Profits if stock moves significantly in either direction. Theta-heavy.</div>
+    </div>
+    <div class="strategy-card">
+      <div class="strategy-card-name">Strangle</div>
+      <div class="strategy-card-legs">+1 call OTM, +1 put OTM</div>
+      <div class="strategy-card-desc">Cheaper than straddle. Requires larger move to profit. Good before major events.</div>
+    </div>
+    <div class="strategy-card">
+      <div class="strategy-card-name">Iron Condor</div>
+      <div class="strategy-card-legs">−1 put OTM, +1 put far OTM<br/>−1 call OTM, +1 call far OTM</div>
+      <div class="strategy-card-desc">Short volatility, range-bound. Max profit if stock stays between short strikes.</div>
+    </div>
+    <div class="strategy-card">
+      <div class="strategy-card-name">Butterfly</div>
+      <div class="strategy-card-legs">+1 call low, −2 call mid, +1 call high</div>
+      <div class="strategy-card-desc">Peaked payoff. Maximum profit if stock closes exactly at middle strike at expiry.</div>
+    </div>
+  </div>
+
+  <h3>Payoff Calculation</h3>
+  <pre><code><span class="kw">def</span> <span class="fn">calculate_payoff</span>(legs, price_range):
+    prices  = np.linspace(price_range[<span class="nu">0</span>], price_range[<span class="nu">1</span>], <span class="nu">200</span>)
+    payoffs = np.zeros(len(prices))
+    <span class="kw">for</span> leg <span class="kw">in</span> legs:
+        intrinsic = np.maximum(<span class="nu">0</span>,
+            (prices - leg.strike) <span class="kw">if</span> leg.option_type == <span class="st">'C'</span>
+            <span class="kw">else</span> (leg.strike - prices))
+        sign = <span class="nu">1</span> <span class="kw">if</span> leg.action == <span class="st">'BUY'</span> <span class="kw">else</span> -<span class="nu">1</span>
+        payoffs += sign * leg.quantity * intrinsic - sign * leg.premium * <span class="nu">100</span>
+    <span class="kw">return</span> [PayoffPoint(price=p, pnl=v) <span class="kw">for</span> p, v <span class="kw">in</span> zip(prices, payoffs)]</code></pre>
+
+  <h2>3.6 Trade Analysis (Vol-Floor Model)</h2>
+  <p>Inspired by Grid Reaper / ScaleOrder scaling strategies. Uses implied volatility to define a statistically-derived support zone for scaling into positions.</p>
+
+  <div class="math">
+    <span class="highlight">Floor Value</span> <span class="op">=</span> <span class="var">Entry Price × ( 1 − IV × √Period )</span>
+    <br/><br/>
+    <span class="highlight">Example:</span> <span class="var">SPY=$500, IV=20%, Monthly period:</span>
+    <br/>
+    <span class="op">Floor = 500 × (1 − 0.20 × √(1/12)) = 500 × 0.9423 = $471.15</span>
+  </div>
+
+  <p>This is a 1-standard-deviation downside move for the period. The grid levels are spaced equally between entry and floor, with capital allocated across levels to achieve a target profit if price recovers to entry.</p>
+
+  <h2>3.7 Database &amp; Caching</h2>
+
+  <h3>PostgreSQL Schema (7 tables)</h3>
+  <table>
+    <thead><tr><th>Table</th><th>Purpose</th><th>Key Columns</th></tr></thead>
+    <tbody>
+      <tr><td><code>symbols</code></td><td>Tracked securities</td><td>ticker, name, exchange, asset_type</td></tr>
+      <tr><td><code>option_contracts</code></td><td>Option metadata</td><td>symbol, strike, expiry, option_type</td></tr>
+      <tr><td><code>option_chain_snapshots</code></td><td>Point-in-time chain data</td><td>contract_id, bid, ask, iv, greeks, timestamp</td></tr>
+      <tr><td><code>iv_history</code></td><td>IV time series for IV Rank</td><td>symbol, expiry, atm_iv, timestamp</td></tr>
+      <tr><td><code>strategy_definitions</code></td><td>9 built-in strategies</td><td>name, description, leg_templates</td></tr>
+      <tr><td><code>strategy_legs</code></td><td>User-saved strategies</td><td>strategy_id, option_type, action, quantity</td></tr>
+      <tr><td><code>trade_analysis_results</code></td><td>Saved trade plans</td><td>symbol, entry, floor, levels, timestamp</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Async SQLAlchemy + asyncpg</h3>
+  <p><code>psycopg2-binary</code> has no Python 3.14 wheel yet. <code>asyncpg</code> is a pure-Python async PostgreSQL driver — faster than psycopg2 on async workloads and works on Python 3.14. The SQLAlchemy engine is configured with <code>pool_size=20</code> to handle concurrent requests.</p>
+
+  <h3>Redis Graceful Degradation</h3>
+  <p>All Redis operations are wrapped in <code>try/except</code> that silently return <code>None</code> on any error. The endpoint re-fetches from yfinance on a cache miss. The app works identically with or without Redis — Redis is a performance optimization, not a dependency.</p>
+
+  <h2>3.8 API Reference</h2>
+
+  <h3>Market Data</h3>
+  <div class="endpoint"><div class="method method-get">GET</div><div class="endpoint-path">/api/v1/market/quote/{symbol}</div><div class="endpoint-desc">Current price, change, volume, market cap</div></div>
+  <div class="endpoint"><div class="method method-get">GET</div><div class="endpoint-path">/api/v1/market/chart/{symbol}?period=3mo&amp;interval=1d</div><div class="endpoint-desc">OHLCV bars for candlestick chart</div></div>
+  <div class="endpoint"><div class="method method-get">GET</div><div class="endpoint-path">/api/v1/options/expiries/{symbol}</div><div class="endpoint-desc">List of available expiry dates with DTE labels</div></div>
+  <div class="endpoint"><div class="method method-get">GET</div><div class="endpoint-path">/api/v1/options/chain/{symbol}?expiry=YYYY-MM-DD&amp;strikes=30</div><div class="endpoint-desc">Full enriched chain: Greeks, IV, bid/ask for N strikes either side of ATM</div></div>
+
+  <h3>Pricing &amp; Greeks</h3>
+  <div class="endpoint"><div class="method method-post">POST</div><div class="endpoint-path">/api/v1/pricing/black-scholes</div><div class="endpoint-desc">Body: {S, K, T, r, q, sigma, option_type} → price + decomposition</div></div>
+  <div class="endpoint"><div class="method method-post">POST</div><div class="endpoint-path">/api/v1/greeks/calculate</div><div class="endpoint-desc">Body: same as above → {delta, gamma, vega, theta, rho}</div></div>
+
+  <h3>Implied Volatility</h3>
+  <div class="endpoint"><div class="method method-get">GET</div><div class="endpoint-path">/api/v1/iv/smile/{symbol}?expiry=YYYY-MM-DD</div><div class="endpoint-desc">IV smile data points (calls + puts) for a single expiry</div></div>
+  <div class="endpoint"><div class="method method-get">GET</div><div class="endpoint-path">/api/v1/iv/term-structure/{symbol}</div><div class="endpoint-desc">ATM IV across all available expirations</div></div>
+  <div class="endpoint"><div class="method method-get">GET</div><div class="endpoint-path">/api/v1/iv/surface/{symbol}</div><div class="endpoint-desc">Full 2D grid of (strike, DTE, IV%) for 3D surface</div></div>
+  <div class="endpoint"><div class="method method-get">GET</div><div class="endpoint-path">/api/v1/iv/skew/{symbol}?expiry=YYYY-MM-DD</div><div class="endpoint-desc">Skew: call IV − put IV by moneyness</div></div>
+
+  <h3>Strategy &amp; Trade</h3>
+  <div class="endpoint"><div class="method method-get">GET</div><div class="endpoint-path">/api/v1/strategy/templates</div><div class="endpoint-desc">List of 9 strategy templates with descriptions</div></div>
+  <div class="endpoint"><div class="method method-post">POST</div><div class="endpoint-path">/api/v1/strategy/build</div><div class="endpoint-desc">Body: {strategy_name, symbol, expiry, underlying_price} → leg list</div></div>
+  <div class="endpoint"><div class="method method-post">POST</div><div class="endpoint-path">/api/v1/strategy/payoff</div><div class="endpoint-desc">Body: {legs, price_range?} → payoff curve, break-evens, max P&amp;L</div></div>
+  <div class="endpoint"><div class="method method-post">POST</div><div class="endpoint-path">/api/v1/trade/analyze</div><div class="endpoint-desc">Body: trade params → floor, grid levels, expected move, risk/reward</div></div>
+  <div class="endpoint"><div class="method method-get">GET</div><div class="endpoint-path">/api/v1/dashboard/analytics/{symbol}?expiry=YYYY-MM-DD</div><div class="endpoint-desc">Full analytics: IV rank, HV, PCR, OI exposure, top volume strikes</div></div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════
+     CHAPTER 4 — FRONTEND
+     ════════════════════════════════════════════════════════════ -->
+<div class="chapter">
+  <div class="chapter-label">Chapter 04</div>
+  <h1 class="chapter-title">Frontend <span class="accent">Architecture</span></h1>
+  <p class="chapter-intro">The frontend is a SvelteKit SPA running entirely client-side (ssr=false). It uses Svelte 5's reactive store system, Apache ECharts for all charts, and Tailwind CSS for a terminal-style dark theme.</p>
+
+  <h2>4.1 SvelteKit &amp; Project Structure</h2>
+
+  <pre><code>frontend/src/
+├── routes/
+│   ├── +layout.ts           <span class="cm"># export const ssr = false (global CSR)</span>
+│   ├── +layout.svelte        <span class="cm"># Navbar + theme sync</span>
+│   ├── +page.svelte          <span class="cm"># Redirect → /chain</span>
+│   ├── chain/+page.svelte    <span class="cm"># Options chain terminal</span>
+│   ├── strategy/+page.svelte <span class="cm"># Strategy builder + payoff diagram</span>
+│   ├── dashboard/+page.svelte <span class="cm"># Analytics dashboard</span>
+│   └── trade/+page.svelte    <span class="cm"># Trade analysis panel</span>
+└── lib/
+    ├── api/
+    │   ├── client.ts         <span class="cm"># Typed fetch wrappers for all endpoints</span>
+    │   └── types.ts          <span class="cm"># All TypeScript interfaces</span>
+    ├── stores/
+    │   ├── market.ts         <span class="cm"># selectedSymbol, optionChain, quote, etc.</span>
+    │   ├── refresh.ts        <span class="cm"># 60s refresh timer + countdown</span>
+    │   └── theme.ts          <span class="cm"># IST-aware dark/light theme store</span>
+    ├── components/
+    │   ├── shared/           <span class="cm"># Navbar, SymbolSearch, ExpirySelector</span>
+    │   ├── OptionsChain/     <span class="cm"># OptionsChainTable, ChainRow</span>
+    │   ├── MarketChart/      <span class="cm"># CandlestickChart</span>
+    │   ├── IVCharts/         <span class="cm"># IVSmile, IVTermStructure, IVSurface</span>
+    │   ├── StrategyBuilder/  <span class="cm"># StrategySelector, LegsTable, PayoffDiagram</span>
+    │   ├── TradeAnalysis/    <span class="cm"># TradePanel</span>
+    │   └── Dashboard/        <span class="cm"># MetricCard</span>
+    ├── utils/
+    │   ├── formatting.ts     <span class="cm"># fmtPrice, fmtPct, fmtVolume, signClass</span>
+    │   └── colors.ts         <span class="cm"># CHART_COLORS constant object</span>
+    └── types/
+        └── echarts-gl.d.ts   <span class="cm"># declare module 'echarts-gl'</span></code></pre>
+
+  <h3>SSR Disabled Globally</h3>
+  <p>SvelteKit defaults to server-side rendering (SSR), which pre-renders page HTML on the server before sending it to the browser. Our pages make <code>fetch('/api/...')</code> calls with relative URLs. On the server, there is no host to resolve relative URLs against, causing a crash. Setting <code>ssr = false</code> in the root <code>+layout.ts</code> turns off SSR for the entire app:</p>
+
+  <pre><code><span class="cm">// src/routes/+layout.ts</span>
+<span class="kw">export const</span> ssr = <span class="tp">false</span>;   <span class="cm">// all pages render client-side only</span></code></pre>
+
+  <h2>4.2 Reactive Stores</h2>
+  <p>Svelte stores are observable state containers. Any component can subscribe to them; when the value changes, all subscribers re-render automatically. The <code>$</code> prefix is syntactic sugar for <code>.subscribe()</code>.</p>
+
+  <pre><code><span class="cm">// src/lib/stores/market.ts</span>
+<span class="kw">export const</span> selectedSymbol = writable&lt;<span class="tp">string</span>&gt;(<span class="st">'SPY'</span>);
+<span class="kw">export const</span> optionChain    = writable&lt;<span class="tp">OptionChain | null</span>&gt;(<span class="tp">null</span>);
+
+<span class="cm">// derived store — recalculates when optionChain or quote changes</span>
+<span class="kw">export const</span> atmStrike = derived(
+  [optionChain, quote],
+  ([$chain, $quote]) => {
+    <span class="kw">if</span> (!$chain || !$quote) <span class="kw">return null</span>;
+    <span class="kw">return</span> $chain.strikes
+      .map(s => s.strike)
+      .reduce((prev, curr) =>
+        Math.abs(curr - $quote.price) &lt; Math.abs(prev - $quote.price) ? curr : prev
+      );
+  }
+);</code></pre>
+
+  <p>In a component, using <code>$selectedSymbol</code> automatically subscribes and triggers re-render on change. No manual subscription management needed.</p>
+
+  <h3>Refresh Timer Store</h3>
+  <p>The <code>refresh.ts</code> store manages two intervals: one that counts down from 60 to 0 every second (for the navbar ring), and one that fires every 60 seconds to trigger a data reload. Both are guarded with <code>if (!browser) return</code> so they never run during SSR.</p>
+
+  <h2>4.3 API Client Layer</h2>
+  <p>All backend calls go through typed wrapper functions in <code>client.ts</code>. They use the browser's native <code>fetch</code> API, and Vite proxies <code>/api</code> requests to <code>localhost:8000</code> in development.</p>
+
+  <pre><code><span class="cm">// src/lib/api/client.ts</span>
+<span class="kw">const</span> BASE = <span class="st">'/api/v1'</span>;
+
+<span class="kw">async function</span> <span class="fn">request</span>&lt;<span class="tp">T</span>&gt;(path: <span class="tp">string</span>, options?: RequestInit): <span class="tp">Promise</span>&lt;<span class="tp">T</span>&gt; {
+  <span class="kw">const</span> res = <span class="kw">await</span> fetch(`${BASE}${path}`, {
+    headers: { <span class="st">'Content-Type'</span>: <span class="st">'application/json'</span> },
+    ...options,
+  });
+  <span class="kw">if</span> (!res.ok) {
+    <span class="kw">const</span> err = <span class="kw">await</span> res.json().catch(() => ({ detail: res.statusText }));
+    <span class="kw">throw new</span> Error(err.detail ?? `HTTP ${res.status}`);
+  }
+  <span class="kw">return</span> res.json();
+}
+
+<span class="kw">export const</span> optionsApi = {
+  chain: (symbol: <span class="tp">string</span>, expiry: <span class="tp">string</span>, strikes = <span class="nu">30</span>) =>
+    request&lt;<span class="tp">OptionChain</span>&gt;(`/options/chain/${symbol}?expiry=${expiry}&amp;strikes=${strikes}`),
+};</code></pre>
+
+  <h2>4.4 Pages &amp; Components</h2>
+
+  <h3>Chain Page (<code>/chain</code>)</h3>
+  <p>The main options chain terminal. Layout: stat ticker bar at top → toolbar (expiry selector, strike count) → table (calls | strike | puts) → candlestick chart below.</p>
+  <ul>
+    <li><strong>Stat bar:</strong> Underlying price, change%, ATM IV, HV-30d, PCR volume/OI, call/put volume</li>
+    <li><strong>Chain table:</strong> 8 columns each side (Vol, OI, Δ, Γ, ν, Θ, Bid, Ask). ATM row highlighted in accent blue.</li>
+    <li><strong>Greeks color coding:</strong> Delta (blue), Gamma (green), Vega (purple), Theta (red)</li>
+    <li><strong>Auto-refresh:</strong> 60-second timer started in <code>onMount</code>, stopped in <code>onDestroy</code></li>
+  </ul>
+
+  <h3>Strategy Page (<code>/strategy</code>)</h3>
+  <p>Left panel: strategy selector dropdown + legs table. Right panel: payoff diagram (ECharts line chart with area fill).</p>
+  <ul>
+    <li>Metric cards: Net Premium, Max Profit, Max Loss, Risk/Reward, Expected Move, Break-Evens</li>
+    <li>Payoff diagram: green area above zero P&amp;L, red area below. Blue dashed line at spot price, amber dashed lines at break-evens.</li>
+  </ul>
+
+  <h3>Dashboard Page (<code>/dashboard</code>)</h3>
+  <p>Analytics overview: 8 metric cards (ATM IV, IV Rank, HV-30d, IV-HV Spread, PCR, Total Volume, Greeks Exposure) + 3-panel chart grid (IV Smile, IV Term Structure, IV Surface 3D) + tables for top-volume calls/puts.</p>
+
+  <h3>Trade Page (<code>/trade</code>)</h3>
+  <p>Left: TradePanel (Grid Reaper-style inputs — entry price, IV, expiry, preset levels, initial size, subsequent size, vol floor period). Right: Candlestick chart + IV Term Structure below.</p>
+
+  <h3>SymbolSearch Component</h3>
+  <p>Debounced search (250ms) with dropdown results. Calls <code>GET /api/v1/symbols/search?q=</code>. On selection, updates the <code>selectedSymbol</code> store — this triggers reactive reloads in every page that watches <code>$selectedSymbol</code>.</p>
+
+  <h3>ChainRow Component</h3>
+  <p>Renders one row of the options chain table. Receives the <code>ChainStrike</code> object (has <code>.call</code> and <code>.put</code> sub-objects). ATM rows get the <code>row-atm</code> CSS class for the blue highlight. Greeks are color-coded with inline style or Tailwind utility classes.</p>
+
+  <h2>4.5 Charts (ECharts)</h2>
+
+  <p>All charts follow the same pattern: <code>onMount</code> initializes the ECharts instance (canvas or WebGL), sets the option object, and a <code>ResizeObserver</code> handles responsive resizing. Reactive statements re-render when props change.</p>
+
+  <div class="box box-warn">
+    <div class="box-title">Svelte 5 onMount Pattern</div>
+    In Svelte 5, <code>onMount(async () =&gt; { return cleanup })</code> does NOT call the cleanup function because Svelte ignores <code>Promise&lt;cleanup&gt;</code>. All chart components use a synchronous <code>onMount</code> that launches async work via an IIFE and returns cleanup synchronously.
+  </div>
+
+  <pre><code><span class="cm">// Correct pattern for all chart components</span>
+<span class="fn">onMount</span>(() => {
+  <span class="kw">let</span> ro: ResizeObserver;
+  (<span class="kw">async</span> () => {
+    <span class="kw">const</span> echarts = <span class="kw">await import</span>(<span class="st">'echarts'</span>);    <span class="cm">// dynamic import</span>
+    chart = echarts.init(chartEl, <span class="tp">null</span>, { renderer: <span class="st">'canvas'</span> });
+    ro = <span class="kw">new</span> ResizeObserver(() => chart.resize());
+    ro.observe(chartEl);
+    <span class="kw">await</span> loadData();
+  })();
+  <span class="kw">return</span> () => { <span class="kw">if</span> (ro) ro.disconnect(); <span class="kw">if</span> (chart) chart.dispose(); };
+});</code></pre>
+
+  <table>
+    <thead><tr><th>Component</th><th>Chart Type</th><th>Renderer</th><th>Key Features</th></tr></thead>
+    <tbody>
+      <tr><td><code>CandlestickChart</code></td><td>Candlestick + bar</td><td>Canvas</td><td>MA20, MA50, volume panel, dataZoom slider</td></tr>
+      <tr><td><code>IVSmile</code></td><td>Line (2 series)</td><td>Canvas</td><td>Calls (green) + Puts (red), smooth curve</td></tr>
+      <tr><td><code>IVTermStructure</code></td><td>Area line</td><td>Canvas</td><td>DTE on x-axis, ATM IV labels on points</td></tr>
+      <tr><td><code>IVSurface</code></td><td>3D surface mesh</td><td>WebGL</td><td>echarts-gl, colour-mapped by IV%</td></tr>
+      <tr><td><code>PayoffDiagram</code></td><td>Area line</td><td>Canvas</td><td>Mark lines: spot (blue), break-evens (amber)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>IVSurface — WebGL Renderer</h3>
+  <p>The 3D surface uses <code>echarts-gl</code> which extends ECharts with WebGL rendering. The renderer is <code>'webgl'</code> (not <code>'canvas'</code>). Since ECharts' TypeScript types don't include <code>'webgl'</code> (it's added by the extension), a cast is needed: <code>renderer: 'webgl' as any</code>. The surface data is a flat array of <code>[strikeIndex, dteIndex, iv_pct]</code> tuples.</p>
+
+  <h2>4.6 Theme System</h2>
+
+  <p>The theme automatically switches based on Indian Standard Time (IST):</p>
+  <ul>
+    <li><strong>Light mode:</strong> 09:00 – 15:30 IST (Indian market hours)</li>
+    <li><strong>Dark mode:</strong> All other times (pre-market, after-market, weekends)</li>
+    <li><strong>User override:</strong> Stored in <code>localStorage</code> as <code>ce_theme</code>. If present, auto-switching is disabled.</li>
+  </ul>
+
+  <pre><code><span class="cm">// src/lib/stores/theme.ts</span>
+<span class="kw">function</span> <span class="fn">getISTHour</span>(): <span class="tp">number</span> {
+  <span class="kw">const</span> now   = <span class="kw">new</span> Date();
+  <span class="kw">const</span> utcMs = now.getTime() + now.getTimezoneOffset() * <span class="nu">60_000</span>;
+  <span class="kw">const</span> istMs = utcMs + <span class="nu">5.5</span> * <span class="nu">3_600_000</span>;   <span class="cm">// UTC+5:30</span>
+  <span class="kw">return new</span> Date(istMs).getHours() + <span class="kw">new</span> Date(istMs).getMinutes() / <span class="nu">60</span>;
+}
+
+<span class="kw">function</span> <span class="fn">inferThemeFromIST</span>(): Theme {
+  <span class="kw">const</span> h = getISTHour();
+  <span class="kw">return</span> (h >= <span class="nu">9</span> &amp;&amp; h &lt; <span class="nu">15.5</span>) ? <span class="st">'light'</span> : <span class="st">'dark'</span>;
+}</code></pre>
+
+  <p>The theme store calls <code>document.documentElement.classList.add('dark')</code> or <code>remove('dark')</code> which triggers Tailwind's dark-mode class strategy. Every minute, the layout's <code>setInterval</code> calls <code>theme.syncToIST()</code> to re-check.</p>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════
+     CHAPTER 5 — INFRASTRUCTURE
+     ════════════════════════════════════════════════════════════ -->
+<div class="chapter">
+  <div class="chapter-label">Chapter 05</div>
+  <h1 class="chapter-title">Infrastructure &amp; <span class="accent">Deployment</span></h1>
+
+  <h2>5.1 Docker Compose</h2>
+
+  <pre><code><span class="cm"># docker/docker-compose.yml — four services</span>
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment: { POSTGRES_DB: convexityedge, POSTGRES_PASSWORD: ... }
+    volumes: [pgdata:/var/lib/postgresql/data]
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+
+  backend:
+    build: ./backend
+    depends_on: [postgres, redis]
+    environment: { DATABASE_URL: ..., REDIS_URL: ... }
+    ports: ["8000:8000"]
+
+  frontend:
+    build: ./frontend
+    depends_on: [backend]
+    ports: ["3000:3000"]</code></pre>
+
+  <div class="box box-info">
+    <div class="box-title">Development vs Production</div>
+    In development, run the backend directly with <code>uvicorn app.main:app --reload</code> from the <code>backend/</code> directory, and the frontend with <code>npm run dev</code> from <code>frontend/</code>. Vite's dev proxy handles <code>/api → :8000</code>. For production, use Docker Compose.
+  </div>
+
+  <h2>5.2 Database Schema</h2>
+
+  <pre><code><span class="cm">-- database/schema.sql (key tables)</span>
+<span class="kw">CREATE TABLE</span> symbols (
+    id          SERIAL PRIMARY KEY,
+    ticker      VARCHAR(10) UNIQUE NOT NULL,
+    name        TEXT,
+    exchange    VARCHAR(20),
+    asset_type  VARCHAR(20) DEFAULT <span class="st">'equity'</span>
+);
+
+<span class="kw">CREATE TABLE</span> option_chain_snapshots (
+    id          BIGSERIAL PRIMARY KEY,
+    contract_id INTEGER REFERENCES option_contracts(id),
+    bid         NUMERIC(12,4),
+    ask         NUMERIC(12,4),
+    last        NUMERIC(12,4),
+    volume      INTEGER,
+    open_interest INTEGER,
+    implied_vol NUMERIC(8,6),
+    delta       NUMERIC(8,6),
+    gamma       NUMERIC(8,6),
+    vega        NUMERIC(8,6),
+    theta       NUMERIC(8,6),
+    rho         NUMERIC(8,6),
+    fetched_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+<span class="kw">CREATE INDEX</span> idx_snapshots_contract_time <span class="kw">ON</span> option_chain_snapshots(contract_id, fetched_at DESC);
+
+<span class="kw">CREATE TABLE</span> iv_history (
+    symbol      VARCHAR(10) NOT NULL,
+    expiry      DATE NOT NULL,
+    atm_iv      NUMERIC(8,6) NOT NULL,
+    recorded_at TIMESTAMPTZ DEFAULT NOW(),
+    PRIMARY KEY (symbol, expiry, recorded_at)
+);</code></pre>
+
+  <h2>5.3 Redis Caching Strategy</h2>
+
+  <table>
+    <thead><tr><th>Cache Key</th><th>TTL</th><th>Content</th><th>Rationale</th></tr></thead>
+    <tbody>
+      <tr><td><code>chain:{symbol}:{expiry}</code></td><td>55s</td><td>Full enriched chain JSON</td><td>Slightly less than 60s refresh to avoid serving stale data</td></tr>
+      <tr><td><code>quote:{symbol}</code></td><td>30s</td><td>Price, change, volume</td><td>Quotes change more frequently</td></tr>
+      <tr><td><code>expiries:{symbol}</code></td><td>300s</td><td>List of expiry dates</td><td>Expiry list is stable intraday</td></tr>
+      <tr><td><code>iv_surface:{symbol}</code></td><td>120s</td><td>Full surface grid</td><td>Expensive computation, less time-sensitive</td></tr>
+    </tbody>
+  </table>
+
+  <p>All cache reads/writes are wrapped in try/except. If Redis is unavailable, <code>cache_get()</code> returns <code>None</code> (cache miss) and the endpoint fetches fresh data from yfinance. No errors propagate to the client.</p>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════
+     CHAPTER 6 — DATA FLOW
+     ════════════════════════════════════════════════════════════ -->
+<div class="chapter">
+  <div class="chapter-label">Chapter 06</div>
+  <h1 class="chapter-title">Data Flow &amp; <span class="accent">Request Lifecycle</span></h1>
+
+  <h2>6.1 Options Chain Request</h2>
+
+  <div class="arch-diagram">
+<span class="layer">Browser: /chain page loads</span>
+  │
+  ├── onMount() fires
+  │     └── loadExpiries('SPY') → GET /api/v1/options/expiries/SPY
+  │           └── FastAPI → YFinanceProvider.get_expiries() [thread pool]
+  │                └── yfinance returns date strings → JSON response
+  │                └── Frontend: expiries store set → ExpirySelector renders
+  │
+  ├── $: if (browser &amp;&amp; $selectedExpiry) loadChain()
+  │     └── Promise.all([quote, chain]) in parallel
+  │           │
+  │           ├── GET /api/v1/market/quote/SPY
+  │           │     └── cache_get('quote:SPY') → miss
+  │           │           └── YFinanceProvider.get_quote() [thread pool]
+  │           │                └── yfinance.fast_info → QuoteData → cache_set → JSON
+  │           │
+  │           └── GET /api/v1/options/chain/SPY?expiry=...&amp;strikes=30
+  │                 └── cache_get('chain:SPY:2026-06-26') → miss
+  │                       └── provider.get_option_chain() [thread pool]
+  │                             └── yfinance.option_chain() → raw DataFrame
+  │                             └── _fi()/_ff() → NaN-safe parsing → OptionContractData list
+  │                       └── enrich_chain():
+  │                             for each contract:
+  │                               mid = (bid + ask) / 2
+  │                               iv  = solve_iv(mid, S, K, T, r, q, type)
+  │                               greeks = calculate_greeks(S, K, T, r, q, iv, type)
+  │                             sort by strike, mark ATM, compute stats
+  │                       └── cache_set('chain:SPY:...', result, ttl=55)
+  │                       └── ORJSONResponse → browser
+  │
+  └── quote.set(q), optionChain.set(chain)
+        └── OptionsChainTable re-renders
+        └── stat bar re-renders
+        └── startRefreshTimer(loadChain) → repeats every 60s
+  </div>
+
+  <h2>6.2 Browser Store Reactivity</h2>
+
+  <div class="arch-diagram">
+<span class="layer">User types 'NVDA' in SymbolSearch</span>
+  │
+  ├── debounce 250ms
+  ├── GET /api/v1/symbols/search?q=NVDA → results dropdown
+  ├── User clicks NVDA
+  │     └── selectedSymbol.set('NVDA')
+  │
+  ├── chain/+page.svelte: $: if (browser &amp;&amp; $selectedSymbol !== prevSymbol)
+  │     └── selectedExpiry.set('')   [reset expiry]
+  │     └── loadExpiries('NVDA')     [fetch new expiry list]
+  │
+  ├── Navbar: $selectedSymbol → input value updates (reactive)
+  │
+  ├── dashboard/+page.svelte: $: if (browser &amp;&amp; $selectedSymbol) load()
+  │     └── re-fetches all analytics for NVDA
+  │
+  └── All components watching $selectedSymbol auto-update
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════
+     CHAPTER 7 — BUGS FIXED
+     ════════════════════════════════════════════════════════════ -->
+<div class="chapter">
+  <div class="chapter-label">Chapter 07</div>
+  <h1 class="chapter-title">Bugs Fixed &amp; <span class="accent">Engineering Decisions</span></h1>
+  <p class="chapter-intro">This chapter documents every non-trivial bug encountered during development, its root cause, and the fix. Understanding these bugs builds deep knowledge of Python, JavaScript, Svelte 5, and Vite internals.</p>
+
+  <h2>Bug 1 — <code>lib/</code> Gitignored</h2>
+  <table>
+    <thead><tr><th>Aspect</th><th>Detail</th></tr></thead>
+    <tbody>
+      <tr><td>Symptom</td><td>All <code>frontend/src/lib/</code> files absent from git history</td></tr>
+      <tr><td>Root Cause</td><td>Python's default <code>.gitignore</code> includes <code>lib/</code> (for virtualenvs). Git silently ignored the entire frontend source directory.</td></tr>
+      <tr><td>Fix</td><td>Removed <code>lib/</code> line from <code>.gitignore</code></td></tr>
+    </tbody>
+  </table>
+
+  <h2>Bug 2 — ECharts <code>.default</code> Does Not Exist</h2>
+  <table>
+    <thead><tr><th>Aspect</th><th>Detail</th></tr></thead>
+    <tbody>
+      <tr><td>Symptom</td><td>Charts blank; TypeScript: <em>Property 'default' does not exist</em></td></tr>
+      <tr><td>Root Cause</td><td>ECharts uses named exports, not a default export. <code>(await import('echarts')).default</code> is <code>undefined</code>, so <code>echarts.init()</code> throws <em>undefined is not a function</em>.</td></tr>
+      <tr><td>Wrong</td><td><code>const echarts = (await import('echarts')).default;</code></td></tr>
+      <tr><td>Fix</td><td><code>const echarts = await import('echarts');</code></td></tr>
+    </tbody>
+  </table>
+
+  <h2>Bug 3 — <code>onMount</code> Async Cleanup Ignored</h2>
+  <table>
+    <thead><tr><th>Aspect</th><th>Detail</th></tr></thead>
+    <tbody>
+      <tr><td>Symptom</td><td>ResizeObserver / ECharts instance never cleaned up on component unmount; memory leak</td></tr>
+      <tr><td>Root Cause</td><td>Svelte's <code>onMount</code> expects either <code>() =&gt; void</code> (sync cleanup) or <code>Promise&lt;never&gt;</code>. An async function returning a cleanup function produces <code>Promise&lt;() =&gt; void&gt;</code> — Svelte ignores it entirely.</td></tr>
+      <tr><td>Fix</td><td>Non-async <code>onMount</code> launches an async IIFE internally, returns cleanup synchronously.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Bug 4 — <code>float('nan') or 0</code> Returns <code>nan</code></h2>
+  <table>
+    <thead><tr><th>Aspect</th><th>Detail</th></tr></thead>
+    <tbody>
+      <tr><td>Symptom</td><td><code>GET /api/v1/options/chain/AAPL</code> → 500 Internal Server Error</td></tr>
+      <tr><td>Root Cause</td><td>yfinance returns <code>float('nan')</code> for missing volume/OI. In Python, <code>nan</code> is truthy, so <code>nan or 0</code> evaluates to <code>nan</code>, and <code>int(nan)</code> raises <code>ValueError: cannot convert float NaN to integer</code>.</td></tr>
+      <tr><td>Fix</td><td>Added <code>_fi()</code>/<code>_ff()</code> helpers using <code>math.isnan()</code> before casting.</td></tr>
+    </tbody>
+  </table>
+  <pre><code><span class="cm"># Why: bool(float('nan')) == True in Python</span>
+>>> <span class="tp">float</span>(<span class="st">'nan'</span>) or <span class="nu">0</span>
+nan        <span class="cm"># not 0 !</span>
+>>> <span class="tp">int</span>(<span class="tp">float</span>(<span class="st">'nan'</span>))
+ValueError: cannot convert float NaN to integer</code></pre>
+
+  <h2>Bug 5 — SSR 500 on Every Page</h2>
+  <table>
+    <thead><tr><th>Aspect</th><th>Detail</th></tr></thead>
+    <tbody>
+      <tr><td>Symptom</td><td>All pages return HTTP 500; browser shows <em>Internal Error</em></td></tr>
+      <tr><td>Root Cause</td><td>SvelteKit SSR tried to render pages on the server. <code>fetch('/api/...')</code> with a relative URL fails server-side because there is no base URL — the Node.js <code>fetch</code> implementation requires a full URL.</td></tr>
+      <tr><td>Fix</td><td><code>+layout.ts</code>: <code>export const ssr = false</code></td></tr>
+    </tbody>
+  </table>
+
+  <h2>Bug 6 — Reactive Statements Run During SSR</h2>
+  <table>
+    <thead><tr><th>Aspect</th><th>Detail</th></tr></thead>
+    <tbody>
+      <tr><td>Symptom</td><td>Pages still crashed during SSR even after adding <code>ssr = false</code> in layout</td></tr>
+      <tr><td>Root Cause</td><td>Svelte 5 executes <code>$:</code> reactive declarations synchronously at component initialization — including during SSR. <code>onMount</code> doesn't run during SSR, but reactive declarations do. Fetch calls in reactive statements ran before <code>ssr = false</code> took effect.</td></tr>
+      <tr><td>Fix</td><td>Guard all reactive fetch calls: <code>$: if (browser &amp;&amp; $selectedSymbol) load()</code></td></tr>
+    </tbody>
+  </table>
+
+  <h2>Bug 7 — Blank Page (Root Cause: Wrong Svelte Build Served to Browser)</h2>
+  <div class="box box-danger">
+    <div class="box-title">Most Complex Bug in This Project</div>
+    This was the hardest bug to diagnose. The app silently produced a completely blank page with no visible errors. Required Chrome headless to capture the console error, then reading Svelte 5's internals to understand it.
+  </div>
+
+  <table>
+    <thead><tr><th>Aspect</th><th>Detail</th></tr></thead>
+    <tbody>
+      <tr><td>Symptom</td><td>Completely blank page in browser. No HTML rendered. No visible error.</td></tr>
+      <tr><td>Console Error</td><td><code>Uncaught TypeError: Cannot read properties of null (reading 'r')</code> at <code>svelte.js:144</code></td></tr>
+      <tr><td>Root Cause</td><td>Svelte 5 ships two builds: <code>index-client.js</code> (browser) and <code>index-server.js</code> (server). The <code>package.json</code> exports use the <code>"browser"</code> condition to select the right one. SvelteKit's Vite plugin was not passing the <code>browser</code> condition to esbuild during dependency pre-bundling, so esbuild used the <code>"default"</code> export — which maps to <code>index-server.js</code>. The server build accesses <code>ssr_context.r</code>, but <code>ssr_context</code> is <code>null</code> in a browser environment. Every component crashed immediately. The bootstrap Promise chain swallowed the error silently.</td></tr>
+      <tr><td>Fix</td><td>Explicitly set <code>resolve.conditions</code> and <code>optimizeDeps.esbuildOptions.conditions</code> in <code>vite.config.ts</code> to <code>['browser', 'module', 'svelte', 'default']</code>.</td></tr>
+    </tbody>
+  </table>
+
+  <pre><code><span class="cm">// vite.config.ts — the fix</span>
+<span class="kw">export default</span> defineConfig({
+  plugins: [sveltekit()],
+  resolve: {
+    conditions: [<span class="st">'browser'</span>, <span class="st">'module'</span>, <span class="st">'svelte'</span>, <span class="st">'default'</span>],
+  },
+  optimizeDeps: {
+    include: [<span class="st">'svelte'</span>, <span class="st">'echarts'</span>],
+    esbuildOptions: {
+      conditions: [<span class="st">'browser'</span>, <span class="st">'module'</span>, <span class="st">'svelte'</span>, <span class="st">'default'</span>],
+    },
+  },
+});</code></pre>
+
+  <h3>Why <code>ssr_context.r</code>?</h3>
+  <p>In Svelte 5's server build (<code>index-server.js</code>), the <code>onDestroy</code> function reads:</p>
+  <pre><code><span class="kw">function</span> <span class="fn">onDestroy</span>(fn) {
+  ssr_context.r.on_destroy(fn);   <span class="cm">// line 144 — ssr_context is null in browser!</span>
+}</code></pre>
+  <p><code>ssr_context</code> is a server-side global that tracks component lifecycle during HTML rendering. It is never initialized in a browser environment, so it is <code>null</code>, and accessing <code>null.r</code> throws the TypeError. The error is caught by the SvelteKit bootstrap <code>Promise.all().then()</code> but there is no <code>.catch()</code> handler, so the page silently stays blank.</p>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════
+     CHAPTER 8 — PERFORMANCE
+     ════════════════════════════════════════════════════════════ -->
+<div class="chapter">
+  <div class="chapter-label">Chapter 08</div>
+  <h1 class="chapter-title">Performance &amp; <span class="accent">Benchmarks</span></h1>
+
+  <h2>8.1 Quant Engine Performance</h2>
+
+  <table>
+    <thead><tr><th>Operation</th><th>Target</th><th>Achieved</th><th>Method</th></tr></thead>
+    <tbody>
+      <tr><td>BS price (single)</td><td>&lt; 1ms</td><td>~0.01ms</td><td>Pure Python + SciPy</td></tr>
+      <tr><td>BS price (10K contracts)</td><td>&lt; 2,000ms</td><td><strong>~4ms</strong></td><td>NumPy vectorized</td></tr>
+      <tr><td>IV solve (Newton-Raphson)</td><td>&lt; 10 iterations</td><td><strong>3–5 iters</strong></td><td>Brenner-Subrahmanyam initial guess</td></tr>
+      <tr><td>Full chain enrichment (30 strikes)</td><td>&lt; 500ms</td><td>~80ms</td><td>Batch Greeks + IV solve</td></tr>
+      <tr><td>yfinance chain fetch</td><td>N/A</td><td>~400ms</td><td>Thread pool (non-blocking)</td></tr>
+    </tbody>
+  </table>
+
+  <h2>8.2 API Response Times (with Redis)</h2>
+
+  <table>
+    <thead><tr><th>Endpoint</th><th>Cache Hit</th><th>Cache Miss</th></tr></thead>
+    <tbody>
+      <tr><td><code>GET /options/chain</code></td><td>~5ms</td><td>~480ms</td></tr>
+      <tr><td><code>GET /market/quote</code></td><td>~2ms</td><td>~200ms</td></tr>
+      <tr><td><code>POST /pricing/black-scholes</code></td><td>N/A</td><td>~1ms</td></tr>
+      <tr><td><code>POST /strategy/payoff</code></td><td>N/A</td><td>~8ms</td></tr>
+      <tr><td><code>GET /iv/surface</code></td><td>~8ms</td><td>~900ms</td></tr>
+    </tbody>
+  </table>
+
+  <h2>8.3 Why NumPy is ~500× Faster</h2>
+
+  <div class="box box-info">
+    <div class="box-title">Vectorization Explained</div>
+    A Python for-loop prices one contract per iteration. Each iteration has Python interpreter overhead (~50ns per bytecode). For 10,000 contracts, that's millions of bytecodes.<br/><br/>
+    NumPy replaces the Python loop with a single call to a C extension that operates on entire arrays. The C code runs at CPU speed with SIMD (Single Instruction Multiple Data) instructions — one CPU instruction processes 4–8 floats simultaneously. Result: the same computation runs ~500× faster.
+  </div>
+
+  <h2>8.4 Frontend Performance</h2>
+
+  <table>
+    <thead><tr><th>Metric</th><th>Value</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Initial page load (dev)</td><td>~600ms</td><td>Vite hot module replacement</td></tr>
+      <tr><td>ECharts canvas render (chain payoff)</td><td>~16ms</td><td>60fps-compatible</td></tr>
+      <tr><td>ECharts WebGL render (3D surface)</td><td>~8ms</td><td>GPU-accelerated</td></tr>
+      <tr><td>Store update → DOM re-render</td><td>&lt; 1ms</td><td>Svelte's compiled output, no VDOM diffing</td></tr>
+    </tbody>
+  </table>
+
+  <h2>8.5 Why Svelte is Faster than React/Vue</h2>
+  <p>React and Vue use a Virtual DOM (VDOM) — they maintain a JavaScript representation of the DOM, diff it on every update, and apply minimal patches. This diffing has non-zero overhead on every state change.</p>
+  <p>Svelte compiles components to vanilla JavaScript at build time. There is no VDOM, no diffing runtime, no framework overhead at runtime. A <code>$selectedSymbol = 'NVDA'</code> assignment compiles directly to a DOM update instruction. This is why Svelte re-renders are measured in microseconds.</p>
+
+  <div class="page-note">
+    ConvexityEdge Technical Documentation v1.0.0 · Built with FastAPI, Svelte 5, Black-Scholes · Divyesh Das · May 2026
+  </div>
+</div>
+
+</body>
+</html>
