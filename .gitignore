@@ -14,11 +14,11 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
 parts/
 sdist/
 var/
+# Note: lib/ is intentionally NOT ignored — frontend/src/lib/ is tracked
 wheels/
 share/python-wheels/
 *.egg-info/
@@ -216,3 +216,14 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Node / SvelteKit
+node_modules/
+.svelte-kit/
+frontend/build/
+frontend/.output/
+.DS_Store
+
+# Docker data volumes
+docker/postgres-data/
+docker/redis-data/

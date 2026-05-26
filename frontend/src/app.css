@@ -1,0 +1,174 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* ── Terminal base styles ─────────────────────────────────────────────────── */
+:root {
+  --scrollbar-track: #13161E;
+  --scrollbar-thumb: #252836;
+  --scrollbar-thumb-hover: #3B82F6;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
+
+/* ── Number formatting ────────────────────────────────────────────────────── */
+.num { font-family: 'JetBrains Mono', monospace; }
+.num-positive { color: #22C55E; }
+.num-negative { color: #EF4444; }
+.num-neutral  { color: #94A3B8; }
+
+/* ── Terminal table ───────────────────────────────────────────────────────── */
+.terminal-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+}
+
+.terminal-table th {
+  background: #13161E;
+  color: #64748B;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  padding: 6px 8px;
+  border-bottom: 1px solid #252836;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.terminal-table td {
+  padding: 4px 8px;
+  border-bottom: 1px solid #1A1D27;
+  color: #CBD5E1;
+  white-space: nowrap;
+}
+
+.terminal-table tr:hover td {
+  background: #1A1D27;
+}
+
+.terminal-table .row-atm td {
+  background: #1E3A5F !important;
+  border-top: 1px solid #3B82F6;
+  border-bottom: 1px solid #3B82F6;
+  color: #F1F5F9;
+  font-weight: 600;
+}
+
+/* ── Stat ticker bar ──────────────────────────────────────────────────────── */
+.stat-bar {
+  background: #13161E;
+  border-bottom: 1px solid #252836;
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.stat-bar::-webkit-scrollbar { display: none; }
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 16px;
+  border-right: 1px solid #252836;
+  min-width: fit-content;
+}
+
+.stat-label {
+  font-size: 0.6rem;
+  color: #64748B;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-family: 'Inter', sans-serif;
+}
+
+.stat-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #F1F5F9;
+}
+
+.stat-value.negative { color: #EF4444; }
+.stat-value.positive { color: #22C55E; }
+.stat-value.highlight {
+  background: #7F1D1D;
+  color: #FCA5A5;
+  padding: 1px 6px;
+  border-radius: 2px;
+}
+
+/* ── Panel card ───────────────────────────────────────────────────────────── */
+.panel {
+  background: #13161E;
+  border: 1px solid #252836;
+}
+
+/* ── Trade panel inputs ───────────────────────────────────────────────────── */
+.trade-input {
+  background: #0D0F14;
+  border: 1px solid #252836;
+  color: #F1F5F9;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8125rem;
+  padding: 5px 8px;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.trade-input:focus { border-color: #3B82F6; }
+
+.trade-btn-primary {
+  background: #3B82F6;
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 7px 0;
+  width: 100%;
+  border: none;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: background 0.15s;
+}
+.trade-btn-primary:hover { background: #2563EB; }
+
+/* ── Loading shimmer ─────────────────────────────────────────────────────── */
+.shimmer {
+  background: linear-gradient(90deg, #13161E 25%, #1A1D27 50%, #13161E 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Stale badge ─────────────────────────────────────────────────────────── */
+.stale-badge {
+  background: #78350F;
+  color: #FDE68A;
+  font-size: 0.6rem;
+  padding: 2px 6px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+}
