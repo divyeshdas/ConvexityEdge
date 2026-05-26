@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { browser } from '$app/environment';
   import { selectedSymbol, selectedExpiry, expiries, quote } from '$stores/market';
   import { marketApi, strategyApi } from '$api/client';
   import type { StrategyLeg, StrategyResult } from '$api/types';
@@ -44,7 +45,7 @@
     await loadExpiries();
   });
 
-  $: if (selectedStrategy && $selectedExpiry && $quote) build();
+  $: if (browser && selectedStrategy && $selectedExpiry && $quote) build();
 </script>
 
 <div class="flex h-[calc(100vh-44px)] gap-0 overflow-hidden">

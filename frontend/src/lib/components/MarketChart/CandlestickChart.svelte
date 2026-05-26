@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
+  import { browser } from '$app/environment';
   import { marketApi } from '$api/client';
   import { CHART_COLORS } from '$utils/colors';
   import type { OHLCBar } from '$api/types';
@@ -143,8 +144,8 @@
     return () => { if (ro) ro.disconnect(); if (chart) chart.dispose(); };
   });
 
-  $: if (symbol) loadData();
-  $: if (period && chart) loadData();
+  $: if (browser && symbol) loadData();
+  $: if (browser && period && chart) loadData();
 </script>
 
 <div class="flex flex-col h-full bg-terminal-bg">

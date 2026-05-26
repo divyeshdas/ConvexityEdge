@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { browser } from '$app/environment';
   import { selectedSymbol, selectedExpiry, expiries, quote } from '$stores/market';
   import { marketApi, dashboardApi, ivApi } from '$api/client';
   import type { DashboardAnalytics } from '$api/types';
@@ -33,7 +34,7 @@
   }
 
   onMount(load);
-  $: if ($selectedSymbol) load();
+  $: if (browser && $selectedSymbol) load();
 </script>
 
 <div class="flex flex-col h-[calc(100vh-44px)] overflow-auto bg-terminal-bg">
