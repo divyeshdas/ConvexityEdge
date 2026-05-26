@@ -59,7 +59,7 @@
   }
 
   onMount(async () => {
-    const echarts = (await import('echarts')).default;
+    const echarts = await import('echarts');
     chart = echarts.init(chartEl, null, { renderer: 'canvas' });
     new ResizeObserver(() => chart.resize()).observe(chartEl);
     load();

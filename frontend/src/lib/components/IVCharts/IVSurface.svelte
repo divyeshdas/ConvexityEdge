@@ -65,9 +65,9 @@
 
   onMount(async () => {
     // ECharts GL for 3D surface
-    const echarts = (await import('echarts')).default;
+    const echarts = await import('echarts');
     await import('echarts-gl');
-    chart = echarts.init(chartEl, null, { renderer: 'webgl' });
+    chart = echarts.init(chartEl, null, { renderer: 'webgl' as any });
     new ResizeObserver(() => chart.resize()).observe(chartEl);
     load();
   });

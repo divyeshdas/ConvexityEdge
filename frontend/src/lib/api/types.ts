@@ -115,6 +115,7 @@ export interface IVSurfacePoint {
   strike:     number;
   dte:        number;
   iv:         number;
+  iv_pct:     number;
   moneyness:  number;
 }
 
@@ -151,12 +152,14 @@ export interface TradeAnalysisRequest {
 }
 
 export interface TradeAnalysisResult {
-  floor_value:        number;
-  max_cash_allocation: number;
-  profit_per_level:   number;
-  all_level_profit:   number;
-  expected_move:      number;
-  risk_reward:        number;
+  floor_value:          number;
+  max_cash_allocation:  number;
+  profit_per_level:     number;
+  all_level_profit:     number;
+  expected_move:        number;
+  risk_reward:          number;
+  floor_pct:            number;
+  expected_move_pct:    number;
 }
 
 // ── Dashboard ──────────────────────────────────────────────────────────────
