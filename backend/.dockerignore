@@ -1,0 +1,16 @@
+.env
+.envrc
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+.git/
+.gitignore
+logs/
+*.log
+.pytest_cache/
+.mypy_cache/
+railway.toml
