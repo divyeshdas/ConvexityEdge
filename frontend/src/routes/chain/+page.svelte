@@ -170,7 +170,7 @@
 
     <!-- Chain table -->
     <div class="overflow-auto min-h-0" style="{showChart ? 'flex: 0 0 60%' : 'flex: 1'}">
-      {#if $isLoading && !chain}
+      {#if $isLoading || !$selectedExpiry}
         <div class="flex items-center justify-center h-32">
           <LoadingSpinner label="Loading option chain..." />
         </div>
@@ -180,6 +180,10 @@
         </div>
       {:else if chain}
         <OptionsChainTable {chain} />
+      {:else}
+        <div class="flex items-center justify-center h-32">
+          <LoadingSpinner label="Loading option chain..." />
+        </div>
       {/if}
     </div>
 

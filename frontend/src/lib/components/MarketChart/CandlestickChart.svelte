@@ -24,6 +24,8 @@
       console.error('Chart load failed', e);
     } finally {
       loading = false;
+      // Canvas was hidden while loading; give DOM one frame to show it then resize
+      setTimeout(() => chart?.resize(), 50);
     }
   }
 
@@ -185,5 +187,5 @@
       </svg>
     </div>
   {/if}
-  <div bind:this={chartEl} class="flex-1 w-full" class:hidden={loading}></div>
+  <div bind:this={chartEl} class="flex-1 w-full min-h-[160px]" class:hidden={loading}></div>
 </div>
