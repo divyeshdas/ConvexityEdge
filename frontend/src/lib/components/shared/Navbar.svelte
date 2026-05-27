@@ -18,20 +18,20 @@
     : null;
 </script>
 
-<nav class="h-11 bg-terminal-surface border-b border-terminal-border flex items-center gap-0 select-none z-50 relative">
+<nav class="h-11 bg-terminal-surface border-b border-terminal-border flex items-center gap-0 select-none z-50 relative shrink-0">
   <!-- Logo -->
-  <a href="/chain" class="flex items-center gap-2 px-4 border-r border-terminal-border h-full shrink-0 hover:bg-terminal-panel transition-colors">
+  <a href="/chain" class="flex items-center gap-2 px-3 md:px-4 border-r border-terminal-border h-full shrink-0 hover:bg-terminal-panel transition-colors">
     <span class="text-accent font-mono font-bold text-sm tracking-wider">CE</span>
     <span class="text-slate-300 font-sans text-xs font-semibold tracking-wide hidden sm:inline">ConvexityEdge</span>
   </a>
 
   <!-- Symbol search -->
-  <div class="flex items-center px-3 border-r border-terminal-border h-full">
+  <div class="flex items-center px-2 md:px-3 border-r border-terminal-border h-full">
     <SymbolSearch />
   </div>
 
-  <!-- Nav links -->
-  <div class="flex items-center h-full">
+  <!-- Nav links — desktop only (mobile uses bottom tab bar) -->
+  <div class="hidden md:flex items-center h-full">
     {#each navLinks as link}
       <a
         href={link.href}
@@ -45,11 +45,10 @@
     {/each}
   </div>
 
-  <!-- Spacer -->
   <div class="flex-1"></div>
 
-  <!-- Refresh counter -->
-  <div class="flex items-center gap-2 px-3 border-l border-terminal-border h-full">
+  <!-- Refresh counter — desktop only -->
+  <div class="hidden md:flex items-center gap-2 px-3 border-l border-terminal-border h-full">
     {#if $isStale}
       <span class="stale-badge">STALE</span>
     {:else if formattedTime}
@@ -70,6 +69,13 @@
     {/if}
   </div>
 
+  <!-- Stale badge on mobile -->
+  {#if $isStale}
+    <div class="flex md:hidden items-center px-2">
+      <span class="stale-badge">STALE</span>
+    </div>
+  {/if}
+
   <!-- Theme toggle -->
   <button
     on:click={() => theme.toggle()}
@@ -77,13 +83,11 @@
     title="Toggle theme"
   >
     {#if $theme === 'dark'}
-      <!-- Sun icon -->
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <circle cx="12" cy="12" r="4" stroke-width="2"/>
         <path stroke-width="2" stroke-linecap="round" d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
       </svg>
     {:else}
-      <!-- Moon icon -->
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-width="2" stroke-linecap="round" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
       </svg>

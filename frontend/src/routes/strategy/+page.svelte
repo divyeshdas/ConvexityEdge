@@ -48,10 +48,10 @@
   $: if (browser && selectedStrategy && $selectedExpiry && $quote) build();
 </script>
 
-<div class="flex h-[calc(100vh-44px)] gap-0 overflow-hidden">
+<div class="flex flex-col md:flex-row h-full overflow-hidden">
 
   <!-- Left panel: strategy selector + legs -->
-  <div class="w-72 shrink-0 border-r border-terminal-border flex flex-col bg-terminal-surface overflow-auto">
+  <div class="w-full md:w-72 shrink-0 border-b md:border-b-0 md:border-r border-terminal-border flex flex-col bg-terminal-surface overflow-auto max-h-64 md:max-h-none">
     <div class="px-3 py-2 border-b border-terminal-border">
       <h2 class="text-xs font-semibold text-slate-200 uppercase tracking-wider">Strategy Builder</h2>
       <p class="text-neutral text-xxs mt-0.5">{$selectedSymbol} · <ExpirySelector compact /></p>
@@ -83,7 +83,7 @@
   <div class="flex-1 flex flex-col overflow-hidden">
     {#if result}
       <!-- Metric cards -->
-      <div class="flex gap-0 border-b border-terminal-border shrink-0">
+      <div class="flex flex-wrap gap-0 border-b border-terminal-border shrink-0">
         {#each [
           { label: 'Net Premium', value: fmtCurrency(result.net_premium), cls: result.net_premium >= 0 ? 'text-up' : 'text-down' },
           { label: 'Max Profit',  value: result.max_profit != null ? fmtCurrency(result.max_profit) : '∞', cls: 'text-up' },

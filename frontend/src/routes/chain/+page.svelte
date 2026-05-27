@@ -72,7 +72,7 @@
   $: q = $quote;
 </script>
 
-<div class="flex flex-col h-[calc(100vh-44px)] overflow-hidden">
+<div class="flex flex-col h-full overflow-hidden">
 
   <!-- ── Stat ticker bar ─────────────────────────────────────────────────── -->
   {#if chain && stats && q}
@@ -169,7 +169,7 @@
   <div class="flex flex-col flex-1 overflow-hidden">
 
     <!-- Chain table -->
-    <div class="flex-1 overflow-auto min-h-0" style="{showChart ? 'flex: 0 0 60%' : 'flex: 1'}">
+    <div class="overflow-auto min-h-0" style="{showChart ? 'flex: 0 0 60%' : 'flex: 1'}">
       {#if $isLoading && !chain}
         <div class="flex items-center justify-center h-32">
           <LoadingSpinner label="Loading option chain..." />
@@ -185,7 +185,7 @@
 
     <!-- Chart panel -->
     {#if showChart}
-      <div class="border-t border-terminal-border shrink-0" style="flex: 0 0 40%;">
+      <div class="border-t border-terminal-border shrink-0" style="flex: 0 0 40%; min-height: 200px;">
         <MarketChartPanel symbol={$selectedSymbol} />
       </div>
     {/if}
