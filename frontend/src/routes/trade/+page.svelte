@@ -16,7 +16,7 @@
   });
 </script>
 
-<div class="flex flex-col md:flex-row h-full overflow-hidden">
+<div class="flex flex-col md:flex-row overflow-hidden" style="min-height: calc(100vh - 44px)">
   <!-- Trade panel -->
   <div class="shrink-0 border-b md:border-b-0 md:border-r border-terminal-border overflow-auto max-h-72 md:max-h-none">
     <TradePanel />

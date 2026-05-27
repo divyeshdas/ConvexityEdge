@@ -72,7 +72,7 @@
   $: q = $quote;
 </script>
 
-<div class="flex flex-col h-full overflow-hidden">
+<div class="flex flex-col" style="height: calc(100vh - 44px)">
 
   <!-- ── Stat ticker bar ─────────────────────────────────────────────────── -->
   {#if chain && stats && q}
