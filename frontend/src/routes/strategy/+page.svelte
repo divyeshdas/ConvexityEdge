@@ -90,7 +90,7 @@
           { label: 'Max Loss',    value: result.max_loss != null ? fmtCurrency(result.max_loss) : '∞', cls: 'text-down' },
           { label: 'Risk/Reward', value: result.risk_reward != null ? `${result.risk_reward}x` : '—', cls: 'text-warning' },
           { label: 'Exp. Move',   value: `±${fmtCurrency(result.expected_move)}`, cls: 'text-accent' },
-          { label: 'Break-Evens', value: result.break_evens.map(b => `$${b}`).join(' / ') || '—', cls: 'text-slate-300' },
+          { label: 'Break-Evens', value: result.break_evens.map(b => `₹${b}`).join(' / ') || '—', cls: 'text-slate-300' },
         ] as card}
           <div class="flex flex-col px-4 py-2 border-r border-terminal-border">
             <span class="text-neutral text-xxs uppercase tracking-wider">{card.label}</span>

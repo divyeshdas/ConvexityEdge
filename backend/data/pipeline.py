@@ -19,12 +19,14 @@ from typing import Optional
 from app.core.config import settings
 from data.providers.base import MarketDataProvider
 from data.providers.yfinance_provider import YFinanceProvider
+from data.providers.angel_one_provider import AngelOneProvider
 
 logger = logging.getLogger(__name__)
 
 # ── Provider registry ──────────────────────────────────────────────────────────
 PROVIDER_MAP: dict[str, type[MarketDataProvider]] = {
-    "yfinance": YFinanceProvider,
+    "yfinance":  YFinanceProvider,
+    "angel_one": AngelOneProvider,
 }
 
 _provider_instance: Optional[MarketDataProvider] = None

@@ -31,7 +31,7 @@
         formatter: (params: any) => {
           const price = params[0]?.axisValue;
           const pnl   = params[0]?.data;
-          return `Price: $${price}<br/>P&L: <b style="color:${pnl >= 0 ? '#22C55E' : '#EF4444'}">$${Number(pnl).toFixed(2)}</b>`;
+          return `Price: ₹${price}<br/>P&L: <b style="color:${pnl >= 0 ? '#22C55E' : '#EF4444'}">₹${Number(pnl).toFixed(2)}</b>`;
         },
       },
       xAxis: {
@@ -44,7 +44,7 @@
         type: 'value',
         axisLabel: {
           color: '#64748B', fontSize: 9, fontFamily: 'JetBrains Mono',
-          formatter: (v: number) => `$${v.toFixed(0)}`,
+          formatter: (v: number) => `₹${v.toFixed(0)}`,
         },
         axisLine: { lineStyle: { color: '#252836' } },
         splitLine: { lineStyle: { color: '#1A1D27' } },
@@ -80,7 +80,7 @@
               ...result.break_evens.map(be => ({
                 xAxis: prices.findIndex(p => Math.abs(p - be) < (prices[1] - prices[0]) * 1.5),
                 lineStyle: { color: '#F59E0B', type: 'dashed', width: 1 },
-                label: { show: true, formatter: `BE $${be}`, color: '#F59E0B', fontSize: 9, fontFamily: 'JetBrains Mono' },
+                label: { show: true, formatter: `BE ₹${be}`, color: '#F59E0B', fontSize: 9, fontFamily: 'JetBrains Mono' },
               })),
             ],
           },

@@ -44,7 +44,7 @@ export function fmtDTE(dte: number): string {
 
 export function fmtDate(dateStr: string): string {
   const d = new Date(dateStr + 'T00:00:00');
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' });
+  return d.toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: '2-digit' });
 }
 
 export function fmtExpiryLabel(dateStr: string, dte: number): string {
@@ -53,9 +53,9 @@ export function fmtExpiryLabel(dateStr: string, dte: number): string {
 
 export function fmtCurrency(v: number | null | undefined): string {
   if (v == null || isNaN(v)) return '—';
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('en-IN', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'INR',
     minimumFractionDigits: 2,
   }).format(v);
 }

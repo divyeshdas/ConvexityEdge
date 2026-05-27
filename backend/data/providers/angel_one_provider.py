@@ -1,0 +1,223 @@
+"""
+Angel One SmartAPI-backed provider for NSE F&O data.
+
+Uses the official smartapi-python SDK which auto-detects the correct public IP
+and MAC address required by Angel One's WAF.
+
+Inherits YFinanceProvider for quotes, OHLC, and symbol search.
+Overrides get_expiries and get_option_chain with Angel One API.
+
+Setup (add to backend/.env):
+  MARKET_DATA_PROVIDER=angel_one
+  ANGEL_ONE_API_KEY=<from smartapi.angelbroking.com developer portal>
+  ANGEL_ONE_CLIENT_CODE=<your Angel One client ID, e.g. A12345>
+  ANGEL_ONE_PASSWORD=<your 4-digit trading PIN>
+  ANGEL_ONE_TOTP_SECRET=<base32 TOTP secret from 2FA setup>
+"""
+
+import asyncio
+import datetime
+
+import pyotp
+
+from app.core.config import settings
+from data.providers.base import OptionContractData
+from data.providers.yfinance_provider import YFinanceProvider, _ff, _fi, _run_sync
+
+_INST_URL = "https://margincalculator.angelbroking.com/OpenAPI_File/files/OpenAPIScripMaster.json"
+
+
+def _make_sdk():
+    from SmartApi import SmartConnect
+    return SmartConnect(api_key=settings.angel_one_api_key)
+
+
+class AngelOneProvider(YFinanceProvider):
+    """
+    NSE F&O option chain via Angel One SmartAPI.
+    Quotes and OHLC continue to use yfinance.
+    """
+
+    def __init__(self):
+        super().__init__()
+        self._obj = None                    # SmartConnect instance
+        self._session_valid = False
+        self._auth_lock  = asyncio.Lock()
+        self._instr_lock = asyncio.Lock()
+        self._instruments: list[dict] = []
+        self._instr_loaded = False
+
+    # ── Authentication ────────────────────────────────────────────────────────
+
+    def _do_login(self):
+        """Synchronous login — called inside thread pool."""
+        if self._obj is None:
+            self._obj = _make_sdk()
+        totp = pyotp.TOTP(settings.angel_one_totp_secret).now()
+        resp = self._obj.generateSession(
+            settings.angel_one_client_code,
+            settings.angel_one_password,
+            totp,
+        )
+        if not resp.get("status"):
+            raise RuntimeError(f"Angel One login failed: {resp.get('message', resp)}")
+        self._session_valid = True
+
+    async def _ensure_auth(self):
+        if self._session_valid:
+            return
+        async with self._auth_lock:
+            if self._session_valid:
+                return
+            await _run_sync(self._do_login)
+
+    # ── Instrument master ─────────────────────────────────────────────────────
+
+    def _load_instruments(self):
+        """Download instrument master synchronously."""
+        import urllib.request, json
+        with urllib.request.urlopen(_INST_URL, timeout=60) as r:
+            self._instruments = json.loads(r.read().decode())
+        self._instr_loaded = True
+
+    async def _ensure_instruments(self):
+        if self._instr_loaded:
+            return
+        async with self._instr_lock:
+            if self._instr_loaded:
+                return
+            await _run_sync(self._load_instruments)
+
+    # ── Provider interface ────────────────────────────────────────────────────
+
+    async def get_expiries(self, symbol: str) -> list[datetime.date]:
+        await self._ensure_instruments()
+        today = datetime.date.today()
+        seen: set[str] = set()
+        dates: list[datetime.date] = []
+
+        for entry in self._instruments:
+            if (
+                entry.get("name", "").upper() == symbol.upper() and
+                entry.get("instrumenttype") in ("OPTSTK", "OPTIDX") and
+                entry.get("exch_seg") == "NFO"
+            ):
+                raw = entry.get("expiry", "")
+                if raw and raw not in seen:
+                    try:
+                        expiry = datetime.datetime.strptime(raw.title(), "%d%b%Y").date()
+                        if expiry >= today:
+                            seen.add(raw)
+                            dates.append(expiry)
+                    except ValueError:
+                        pass
+
+        return sorted(dates)
+
+    async def get_option_chain(
+        self,
+        symbol: str,
+        expiry: datetime.date,
+    ) -> list[OptionContractData]:
+        await self._ensure_auth()
+        await self._ensure_instruments()
+
+        expiry_str = expiry.strftime("%d%b%Y").upper()  # e.g. "30JUN2026"
+
+        # ── Phase 1: IV + volume + Greeks from optionGreek ──────────────────
+        def _fetch_greeks():
+            import time
+            for attempt in range(3):
+                try:
+                    resp = self._obj.optionGreek({"name": symbol.upper(), "expirydate": expiry_str})
+                    if not resp.get("status"):
+                        self._session_valid = False
+                        raise RuntimeError(f"optionGreek failed: {resp.get('message', resp)}")
+                    return resp.get("data") or []
+                except Exception as e:
+                    if "rate" in str(e).lower() and attempt < 2:
+                        time.sleep(2 ** attempt)   # 1s, 2s backoff
+                        continue
+                    raise
+
+        greek_rows = await _run_sync(_fetch_greeks)
+
+        # ── Phase 2: bid/ask/ltp/OI from getMarketData (FULL mode) ──────────
+        # Build token lookup from instrument master: (strike, CE/PE) -> token
+        token_map: dict[tuple[float, str], str] = {}
+        for entry in self._instruments:
+            if (
+                entry.get("name", "").upper() == symbol.upper() and
+                entry.get("instrumenttype") in ("OPTSTK", "OPTIDX") and
+                entry.get("exch_seg") == "NFO"
+            ):
+                raw = entry.get("expiry", "")
+                try:
+                    ent_exp = datetime.datetime.strptime(raw.title(), "%d%b%Y").date()
+                except ValueError:
+                    continue
+                if ent_exp != expiry:
+                    continue
+                sym_str = entry.get("symbol", "")
+                otype = "CE" if sym_str.endswith("CE") else "PE"
+                try:
+                    # Instrument master stores strike × 100 (NSE internal format)
+                    strike = float(entry.get("strike", 0)) / 100.0
+                except (TypeError, ValueError):
+                    continue
+                token_map[(strike, otype)] = entry.get("token", "")
+
+        tokens = [t for t in token_map.values() if t]
+
+        # Batch into groups of 50 (Angel One limit)
+        md_map: dict[str, dict] = {}   # symbolToken -> market data row
+        for i in range(0, len(tokens), 50):
+            batch = tokens[i : i + 50]
+
+            def _fetch_md(b=batch):
+                result = self._obj.getMarketData("FULL", {"NFO": b})
+                if not result.get("status"):
+                    return []
+                return result.get("data", {}).get("fetched") or []
+
+            fetched = await _run_sync(_fetch_md)
+            for item in fetched:
+                tok = str(item.get("symbolToken", ""))
+                if tok:
+                    md_map[tok] = item
+
+        # Reverse map: (strike, type) -> market data
+        def _md_for(strike: float, otype: str) -> dict:
+            tok = token_map.get((strike, otype), "")
+            return md_map.get(tok, {})
+
+        # ── Phase 3: merge into OptionContractData ───────────────────────────
+        contracts: list[OptionContractData] = []
+        for row in greek_rows:
+            strike = _ff(row.get("strikePrice"))
+            otype  = row.get("optionType", "CE")   # "CE" or "PE"
+            md     = _md_for(strike, otype)
+
+            iv_pct = _ff(row.get("impliedVolatility"))
+            iv     = iv_pct / 100.0 if iv_pct > 0.01 else None
+
+            # bid/ask are in depth.buy[0]/sell[0]; ltp is top-level
+            depth = md.get("depth") or {}
+            bid = _ff((depth.get("buy")  or [{}])[0].get("price"))
+            ask = _ff((depth.get("sell") or [{}])[0].get("price"))
+            ltp = _ff(md.get("ltp"))
+
+            contracts.append(OptionContractData(
+                symbol=symbol.upper(),
+                option_type="C" if otype == "CE" else "P",
+                strike=strike,
+                expiry=expiry,
+                bid=bid,
+                ask=ask,
+                last=ltp,
+                volume=_fi(row.get("tradeVolume")) or _fi(md.get("tradeVolume")),
+                open_interest=_fi(md.get("opnInterest")),
+                implied_vol=iv if iv and 0.001 < iv < 10.0 else None,
+            ))
+
+        return contracts
