@@ -1,7 +1,7 @@
 import { writable, derived } from 'svelte/store';
 import type { OptionChain, Quote, Expiry } from '$lib/api/types';
 
-export const selectedSymbol = writable<string>('SPY');
+export const selectedSymbol = writable<string>('RELIANCE');
 export const selectedExpiry  = writable<string>('');
 export const strikeCount     = writable<number>(20);
 

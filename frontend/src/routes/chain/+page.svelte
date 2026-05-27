@@ -79,7 +79,7 @@
     <div class="stat-bar shrink-0">
       <div class="stat-item">
         <span class="stat-label">Underlying</span>
-        <span class="stat-value">${fmtPrice(q.price)}</span>
+        <span class="stat-value">₹{fmtPrice(q.price)}</span>
       </div>
       <div class="stat-item">
         <span class="stat-label">Change</span>

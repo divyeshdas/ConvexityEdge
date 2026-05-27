@@ -1,9 +1,10 @@
 """
-yfinance-backed implementation of MarketDataProvider.
+yfinance-backed implementation of MarketDataProvider — Indian NSE edition.
 
-Uses yfinance for quotes, OHLC, and options chain data.
-Runs in an async thread pool to avoid blocking the FastAPI event loop
-(yfinance is synchronous under the hood).
+Fetches NSE-listed equity quotes, OHLC, and options chain data.
+Symbols are stored without exchange suffix (e.g. "RELIANCE"); the provider
+appends ".NS" internally when calling yfinance so the rest of the app
+never has to know about exchange suffixes.
 """
 
 import asyncio
@@ -38,15 +39,19 @@ from data.providers.base import (
     OptionContractData,
 )
 
-# yfinance period/interval strings supported
 VALID_PERIODS   = {"1d","5d","1mo","3mo","6mo","1y","2y","5y","10y","ytd","max"}
 VALID_INTERVALS = {"1m","2m","5m","15m","30m","60m","90m","1h","1d","5d","1wk","1mo","3mo"}
 
-_EXECUTOR = None  # shared thread-pool executor
+
+def _nse(symbol: str) -> str:
+    """Append NSE suffix for yfinance if not already present."""
+    s = symbol.upper()
+    if s.endswith('.NS') or s.endswith('.BO'):
+        return s
+    return f"{s}.NS"
 
 
 def _run_sync(fn):
-    """Run a synchronous callable in the default thread pool."""
     loop = asyncio.get_event_loop()
     return loop.run_in_executor(None, fn)
 
@@ -55,16 +60,16 @@ class YFinanceProvider(MarketDataProvider):
 
     async def get_quote(self, symbol: str) -> QuoteData:
         def _fetch():
-            ticker = yf.Ticker(symbol)
-            info = ticker.fast_info
-            hist = ticker.history(period="2d", interval="1d")
+            ticker = yf.Ticker(_nse(symbol))
+            info   = ticker.fast_info
+            hist   = ticker.history(period="2d", interval="1d")
 
-            price      = float(info.last_price or 0)
-            prev_close = float(hist["Close"].iloc[-2]) if len(hist) >= 2 else price
+            price      = _ff(info.last_price)
+            prev_close = _ff(hist["Close"].iloc[-2]) if len(hist) >= 2 else price
             change     = price - prev_close
             change_pct = (change / prev_close) if prev_close else 0.0
-            volume     = int(info.three_month_average_volume or 0)
-            mkt_cap    = float(info.market_cap) if hasattr(info, 'market_cap') and info.market_cap else None
+            volume     = _fi(getattr(info, 'three_month_average_volume', 0))
+            mkt_cap    = _ff(getattr(info, 'market_cap', None)) or None
 
             return QuoteData(
                 symbol=symbol.upper(),
@@ -88,7 +93,7 @@ class YFinanceProvider(MarketDataProvider):
         interval = interval if interval in VALID_INTERVALS else "1d"
 
         def _fetch():
-            ticker = yf.Ticker(symbol)
+            ticker = yf.Ticker(_nse(symbol))
             hist = ticker.history(period=period, interval=interval)
             bars = []
             for ts, row in hist.iterrows():
@@ -111,9 +116,8 @@ class YFinanceProvider(MarketDataProvider):
 
     async def get_expiries(self, symbol: str) -> list[datetime.date]:
         def _fetch():
-            ticker = yf.Ticker(symbol)
-            raw = ticker.options  # tuple of date strings "YYYY-MM-DD"
-            return [datetime.date.fromisoformat(d) for d in raw]
+            ticker = yf.Ticker(_nse(symbol))
+            return [datetime.date.fromisoformat(d) for d in ticker.options]
 
         return await _run_sync(_fetch)
 
@@ -125,7 +129,7 @@ class YFinanceProvider(MarketDataProvider):
         expiry_str = expiry.isoformat()
 
         def _fetch():
-            ticker = yf.Ticker(symbol)
+            ticker = yf.Ticker(_nse(symbol))
             chain  = ticker.option_chain(expiry_str)
 
             contracts: list[OptionContractData] = []
@@ -153,25 +157,38 @@ class YFinanceProvider(MarketDataProvider):
         return await _run_sync(_fetch)
 
     async def search_symbols(self, query: str) -> list[dict]:
-        """
-        yfinance doesn't have a built-in symbol search endpoint.
-        We check against the seeded symbol list and do a simple
-        prefix/substring match. A production provider (Polygon, Alpaca)
-        would hit a proper search API here.
-        """
+        # NSE F&O stocks with active options markets
         KNOWN_SYMBOLS = [
-            {"ticker": "AAPL",  "name": "Apple Inc.",                     "exchange": "NASDAQ", "asset_type": "equity"},
-            {"ticker": "MSFT",  "name": "Microsoft Corporation",           "exchange": "NASDAQ", "asset_type": "equity"},
-            {"ticker": "AMZN",  "name": "Amazon.com Inc.",                 "exchange": "NASDAQ", "asset_type": "equity"},
-            {"ticker": "NVDA",  "name": "NVIDIA Corporation",              "exchange": "NASDAQ", "asset_type": "equity"},
-            {"ticker": "GOOGL", "name": "Alphabet Inc.",                   "exchange": "NASDAQ", "asset_type": "equity"},
-            {"ticker": "META",  "name": "Meta Platforms Inc.",             "exchange": "NASDAQ", "asset_type": "equity"},
-            {"ticker": "TSLA",  "name": "Tesla Inc.",                      "exchange": "NASDAQ", "asset_type": "equity"},
-            {"ticker": "SPY",   "name": "SPDR S&P 500 ETF Trust",          "exchange": "NYSE",   "asset_type": "etf"},
-            {"ticker": "QQQ",   "name": "Invesco QQQ Trust",               "exchange": "NASDAQ", "asset_type": "etf"},
-            {"ticker": "IWM",   "name": "iShares Russell 2000 ETF",        "exchange": "NYSE",   "asset_type": "etf"},
-            {"ticker": "GLD",   "name": "SPDR Gold Shares",                "exchange": "NYSE",   "asset_type": "etf"},
-            {"ticker": "TLT",   "name": "iShares 20+ Year Treasury Bond",  "exchange": "NASDAQ", "asset_type": "etf"},
+            {"ticker": "RELIANCE",    "name": "Reliance Industries Ltd",          "exchange": "NSE", "asset_type": "equity"},
+            {"ticker": "TCS",         "name": "Tata Consultancy Services Ltd",    "exchange": "NSE", "asset_type": "equity"},
+            {"ticker": "INFY",        "name": "Infosys Ltd",                      "exchange": "NSE", "asset_type": "equity"},
+            {"ticker": "HDFCBANK",    "name": "HDFC Bank Ltd",                    "exchange": "NSE", "asset_type": "equity"},
+            {"ticker": "ICICIBANK",   "name": "ICICI Bank Ltd",                   "exchange": "NSE", "asset_type": "equity"},
+            {"ticker": "SBIN",        "name": "State Bank of India",              "exchange": "NSE", "asset_type": "equity"},
+            {"ticker": "BAJFINANCE",  "name": "Bajaj Finance Ltd",                "exchange": "NSE", "asset_type": "equity"},
+            {"ticker": "WIPRO",       "name": "Wipro Ltd",                        "exchange": "NSE", "asset_type": "equity"},
+            {"ticker": "AXISBANK",    "name": "Axis Bank Ltd",                    "exchange": "NSE", "asset_type": "equity"},
+            {"ticker": "KOTAKBANK",   "name": "Kotak Mahindra Bank Ltd",          "exchange": "NSE", "asset_type": "equity"},
+            {"ticker": "TATAMOTORS",  "name": "Tata Motors Ltd",                  "exchange": "NSE", "asset_type": "equity"},
+            {"ticker": "MARUTI",      "name": "Maruti Suzuki India Ltd",          "exchange": "NSE", "asset_type": "equity"},
+            {"ticker": "SUNPHARMA",   "name": "Sun Pharmaceutical Industries",    "exchange": "NSE", "asset_type": "equity"},
+            {"ticker": "HINDUNILVR",  "name": "Hindustan Unilever Ltd",           "exchange": "NSE", "asset_type": "equity"},
+            {"ticker": "ITC",         "name": "ITC Ltd",                          "exchange": "NSE", "asset_type": "equity"},
+            {"ticker": "ONGC",        "name": "Oil and Natural Gas Corp",         "exchange": "NSE", "asset_type": "equity"},
+            {"ticker": "NTPC",        "name": "NTPC Ltd",                         "exchange": "NSE", "asset_type": "equity"},
+            {"ticker": "POWERGRID",   "name": "Power Grid Corp of India",         "exchange": "NSE", "asset_type": "equity"},
+            {"ticker": "ADANIENT",    "name": "Adani Enterprises Ltd",            "exchange": "NSE", "asset_type": "equity"},
+            {"ticker": "ADANIPORTS",  "name": "Adani Ports and SEZ Ltd",          "exchange": "NSE", "asset_type": "equity"},
+            {"ticker": "TATASTEEL",   "name": "Tata Steel Ltd",                   "exchange": "NSE", "asset_type": "equity"},
+            {"ticker": "JSWSTEEL",    "name": "JSW Steel Ltd",                    "exchange": "NSE", "asset_type": "equity"},
+            {"ticker": "HCLTECH",     "name": "HCL Technologies Ltd",             "exchange": "NSE", "asset_type": "equity"},
+            {"ticker": "TECHM",       "name": "Tech Mahindra Ltd",                "exchange": "NSE", "asset_type": "equity"},
+            {"ticker": "LTIM",        "name": "LTIMindtree Ltd",                  "exchange": "NSE", "asset_type": "equity"},
+            {"ticker": "BAJAJFINSV",  "name": "Bajaj Finserv Ltd",                "exchange": "NSE", "asset_type": "equity"},
+            {"ticker": "ASIANPAINT",  "name": "Asian Paints Ltd",                 "exchange": "NSE", "asset_type": "equity"},
+            {"ticker": "ULTRACEMCO",  "name": "UltraTech Cement Ltd",             "exchange": "NSE", "asset_type": "equity"},
+            {"ticker": "NESTLEIND",   "name": "Nestle India Ltd",                 "exchange": "NSE", "asset_type": "equity"},
+            {"ticker": "TITAN",       "name": "Titan Company Ltd",                "exchange": "NSE", "asset_type": "equity"},
         ]
         q = query.upper()
         return [

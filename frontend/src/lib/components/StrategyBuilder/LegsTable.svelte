@@ -23,7 +23,7 @@
         <td class="font-mono {leg.option_type === 'C' ? 'text-blue-400' : 'text-red-400'}">
           {leg.option_type === 'C' ? 'CALL' : 'PUT'}
         </td>
-        <td class="text-right num">${leg.strike}</td>
+        <td class="text-right num">₹{leg.strike}</td>
         <td class="text-neutral">{leg.expiry}</td>
         <td class="text-right num">{leg.premium > 0 ? fmtPrice(leg.premium) : '—'}</td>
         <td class="text-right num">{leg.quantity}</td>

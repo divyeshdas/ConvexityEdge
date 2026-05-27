@@ -91,7 +91,7 @@
           <tbody>
             {#each analytics.top_volume_calls as row}
               <tr>
-                <td class="text-left font-mono">${row.strike}</td>
+                <td class="text-left font-mono">₹{row.strike}</td>
                 <td class="text-right num text-up">{fmtVolume(row.volume)}</td>
               </tr>
             {/each}
@@ -107,7 +107,7 @@
           <tbody>
             {#each analytics.top_volume_puts as row}
               <tr>
-                <td class="text-left font-mono">${row.strike}</td>
+                <td class="text-left font-mono">₹{row.strike}</td>
                 <td class="text-right num text-down">{fmtVolume(row.volume)}</td>
               </tr>
             {/each}
