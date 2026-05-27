@@ -61,15 +61,25 @@ class YFinanceProvider(MarketDataProvider):
     async def get_quote(self, symbol: str) -> QuoteData:
         def _fetch():
             ticker = yf.Ticker(_nse(symbol))
-            info   = ticker.fast_info
-            hist   = ticker.history(period="2d", interval="1d")
+            hist   = ticker.history(period="5d", interval="1d")
 
-            price      = _ff(info.last_price)
-            prev_close = _ff(hist["Close"].iloc[-2]) if len(hist) >= 2 else price
+            if hist.empty:
+                price      = 0.0
+                prev_close = 0.0
+            else:
+                price      = _ff(hist["Close"].iloc[-1])
+                prev_close = _ff(hist["Close"].iloc[-2]) if len(hist) >= 2 else price
+
             change     = price - prev_close
             change_pct = (change / prev_close) if prev_close else 0.0
-            volume     = _fi(getattr(info, 'three_month_average_volume', 0))
-            mkt_cap    = _ff(getattr(info, 'market_cap', None)) or None
+
+            try:
+                info    = ticker.fast_info
+                volume  = _fi(getattr(info, 'three_month_average_volume', 0))
+                mkt_cap = _ff(getattr(info, 'market_cap', None)) or None
+            except Exception:
+                volume  = 0
+                mkt_cap = None
 
             return QuoteData(
                 symbol=symbol.upper(),
