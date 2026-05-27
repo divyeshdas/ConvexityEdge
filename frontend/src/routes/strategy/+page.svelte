@@ -48,7 +48,7 @@
   $: if (browser && selectedStrategy && $selectedExpiry && $quote) build();
 </script>
 
-<div class="flex flex-col md:flex-row h-full overflow-hidden">
+<div class="flex flex-col md:flex-row overflow-hidden" style="min-height: calc(100vh - 44px)">
 
   <!-- Left panel: strategy selector + legs -->
   <div class="w-full md:w-72 shrink-0 border-b md:border-b-0 md:border-r border-terminal-border flex flex-col bg-terminal-surface overflow-auto max-h-64 md:max-h-none">

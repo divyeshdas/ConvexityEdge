@@ -37,7 +37,7 @@
   $: if (browser && $selectedSymbol) load();
 </script>
 
-<div class="flex flex-col h-full overflow-auto bg-terminal-bg">
+<div class="flex flex-col overflow-auto bg-terminal-bg" style="min-height: calc(100vh - 44px)">
 
   {#if loading}
     <div class="flex items-center justify-center h-32"><LoadingSpinner label="Loading analytics..." /></div>
