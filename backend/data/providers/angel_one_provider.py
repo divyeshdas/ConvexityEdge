@@ -21,8 +21,19 @@ import datetime
 import pyotp
 
 from app.core.config import settings
-from data.providers.base import OptionContractData
+from data.providers.base import OptionContractData, OHLCBar
 from data.providers.yfinance_provider import YFinanceProvider, _ff, _fi, _run_sync
+
+_INTERVAL_MAP = {
+    "1m": "ONE_MINUTE", "5m": "FIVE_MINUTE", "15m": "FIFTEEN_MINUTE",
+    "30m": "THIRTY_MINUTE", "60m": "ONE_HOUR", "1h": "ONE_HOUR",
+    "1d": "ONE_DAY", "1wk": "ONE_WEEK", "1mo": "ONE_MONTH",
+}
+
+_PERIOD_DAYS = {
+    "1d": 1, "5d": 5, "1mo": 30, "3mo": 90, "6mo": 180,
+    "1y": 365, "2y": 730, "5y": 1825, "ytd": 180, "max": 1825,
+}
 
 _INST_URL = "https://margincalculator.angelbroking.com/OpenAPI_File/files/OpenAPIScripMaster.json"
 
@@ -134,6 +145,56 @@ class AngelOneProvider(YFinanceProvider):
             market_cap=None,
             timestamp=datetime.datetime.utcnow(),
         )
+
+    async def get_ohlc(self, symbol: str, period: str = "3mo", interval: str = "1d") -> list[OHLCBar]:
+        await self._ensure_auth()
+        await self._ensure_instruments()
+
+        token = None
+        for entry in self._instruments:
+            if entry.get("name", "").upper() == symbol.upper() and entry.get("exch_seg") == "NSE":
+                token = entry.get("token", "")
+                if token:
+                    break
+
+        if not token:
+            return await super().get_ohlc(symbol, period, interval)
+
+        ao_interval = _INTERVAL_MAP.get(interval, "ONE_DAY")
+        days = _PERIOD_DAYS.get(period, 90)
+        today = datetime.datetime.now()
+        fromdate = (today - datetime.timedelta(days=days)).strftime("%Y-%m-%d 09:15")
+        todate = today.strftime("%Y-%m-%d 15:30")
+
+        def _fetch():
+            result = self._obj.getCandleData({
+                "exchange": "NSE",
+                "symboltoken": token,
+                "interval": ao_interval,
+                "fromdate": fromdate,
+                "todate": todate,
+            })
+            if not result.get("status"):
+                return []
+            return result.get("data") or []
+
+        rows = await _run_sync(_fetch)
+        bars = []
+        for row in rows:
+            try:
+                # row = [timestamp, open, high, low, close, volume]
+                ts = datetime.datetime.fromisoformat(row[0].replace("T", " ").split("+")[0])
+                bars.append(OHLCBar(
+                    time=ts,
+                    open=_ff(row[1]),
+                    high=_ff(row[2]),
+                    low=_ff(row[3]),
+                    close=_ff(row[4]),
+                    volume=_fi(row[5]),
+                ))
+            except Exception:
+                continue
+        return bars
 
     async def get_expiries(self, symbol: str) -> list[datetime.date]:
         await self._ensure_instruments()
