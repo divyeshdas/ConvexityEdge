@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field, field_validator
+from pydantic import Field
 from typing import List
 import json
 
@@ -64,15 +64,12 @@ class Settings(BaseSettings):
     api_port: int = 8000
     api_debug: bool = False
     secret_key: str = "change_me_in_production"
-    # Comma-separated list of allowed origins, e.g. https://yourapp.vercel.app
-    cors_origins: List[str] = ["http://localhost:3000", "http://localhost:5173"]
+    # Comma-separated string of allowed CORS origins
+    cors_origins_str: str = "http://localhost:3000,http://localhost:5173"
 
-    @field_validator("cors_origins", mode="before")
-    @classmethod
-    def parse_cors(cls, v):
-        if isinstance(v, str):
-            return [o.strip() for o in v.split(",") if o.strip()]
-        return v
+    @property
+    def cors_origins(self) -> list:
+        return [o.strip() for o in self.cors_origins_str.split(",") if o.strip()]
 
     # ── Market Data ───────────────────────────────────────────────────────────
     market_data_provider: str = "yfinance"
