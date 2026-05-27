@@ -2,10 +2,11 @@ import asyncio
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import orjson
 from fastapi.responses import ORJSONResponse, JSONResponse
+from starlette.types import ASGIApp, Receive, Scope, Send
 
 from app.core.config import settings
 from app.core.redis import close_redis
@@ -49,6 +50,23 @@ async def lifespan(app: FastAPI):
     logger.info("ConvexityEdge backend shutting down.")
 
 
+class _CatchAllMiddleware:
+    """Pure ASGI middleware — placed inside CORSMiddleware so 500 responses get CORS headers."""
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+        try:
+            await self.app(scope, receive, send)
+        except Exception as exc:
+            logger.exception("Unhandled exception: %s", exc)
+            response = JSONResponse(status_code=500, content={"detail": "Internal server error"})
+            await response(scope, receive, send)
+
+
 app = FastAPI(
     title="ConvexityEdge",
     description="Professional Black-Scholes Options Volatility Analytics Platform",
@@ -57,6 +75,9 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# _CatchAllMiddleware added first → ends up inside CORSMiddleware in the ASGI stack.
+# This ensures 500 error responses flow through CORSMiddleware and get CORS headers.
+app.add_middleware(_CatchAllMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -66,12 +87,6 @@ app.add_middleware(
 )
 
 app.include_router(api_router)
-
-
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    logger.exception("Unhandled exception: %s", exc)
-    return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 
 
 @app.get("/health")
