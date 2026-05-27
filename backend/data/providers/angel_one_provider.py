@@ -90,6 +90,51 @@ class AngelOneProvider(YFinanceProvider):
 
     # ── Provider interface ────────────────────────────────────────────────────
 
+    async def get_quote(self, symbol: str):
+        await self._ensure_auth()
+        await self._ensure_instruments()
+
+        # Find NSE equity token from instrument master
+        token = None
+        for entry in self._instruments:
+            if (
+                entry.get("name", "").upper() == symbol.upper() and
+                entry.get("exch_seg") == "NSE"
+            ):
+                token = entry.get("token", "")
+                if token:
+                    break
+
+        if not token:
+            return await super().get_quote(symbol)
+
+        def _fetch():
+            result = self._obj.getMarketData("FULL", {"NSE": [token]})
+            if not result.get("status"):
+                return None
+            fetched = (result.get("data") or {}).get("fetched") or []
+            return fetched[0] if fetched else None
+
+        md = await _run_sync(_fetch)
+        if not md:
+            return await super().get_quote(symbol)
+
+        from data.providers.base import QuoteData
+        ltp   = _ff(md.get("ltp"))
+        close = _ff(md.get("close"))
+        change     = ltp - close
+        change_pct = (change / close) if close else 0.0
+
+        return QuoteData(
+            symbol=symbol.upper(),
+            price=ltp,
+            change=change,
+            change_pct=change_pct,
+            volume=_fi(md.get("tradeVolume")),
+            market_cap=None,
+            timestamp=datetime.datetime.utcnow(),
+        )
+
     async def get_expiries(self, symbol: str) -> list[datetime.date]:
         await self._ensure_instruments()
         today = datetime.date.today()
