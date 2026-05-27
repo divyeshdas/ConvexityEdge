@@ -122,27 +122,6 @@ class AngelOneProvider(YFinanceProvider):
         await self._ensure_auth()
         await self._ensure_instruments()
 
-        expiry_str = expiry.strftime("%d%b%Y").upper()  # e.g. "30JUN2026"
-
-        # ── Phase 1: IV + volume + Greeks from optionGreek ──────────────────
-        def _fetch_greeks():
-            import time
-            for attempt in range(3):
-                try:
-                    resp = self._obj.optionGreek({"name": symbol.upper(), "expirydate": expiry_str})
-                    if not resp.get("status"):
-                        self._session_valid = False
-                        raise RuntimeError(f"optionGreek failed: {resp.get('message', resp)}")
-                    return resp.get("data") or []
-                except Exception as e:
-                    if "rate" in str(e).lower() and attempt < 2:
-                        time.sleep(2 ** attempt)   # 1s, 2s backoff
-                        continue
-                    raise
-
-        greek_rows = await _run_sync(_fetch_greeks)
-
-        # ── Phase 2: bid/ask/ltp/OI from getMarketData (FULL mode) ──────────
         # Build token lookup from instrument master: (strike, CE/PE) -> token
         token_map: dict[tuple[float, str], str] = {}
         for entry in self._instruments:
@@ -161,7 +140,6 @@ class AngelOneProvider(YFinanceProvider):
                 sym_str = entry.get("symbol", "")
                 otype = "CE" if sym_str.endswith("CE") else "PE"
                 try:
-                    # Instrument master stores strike × 100 (NSE internal format)
                     strike = float(entry.get("strike", 0)) / 100.0
                 except (TypeError, ValueError):
                     continue
@@ -169,8 +147,8 @@ class AngelOneProvider(YFinanceProvider):
 
         tokens = [t for t in token_map.values() if t]
 
-        # Batch into groups of 50 (Angel One limit)
-        md_map: dict[str, dict] = {}   # symbolToken -> market data row
+        # Batch market data requests (Angel One limit: 50 tokens per call)
+        md_map: dict[str, dict] = {}
         for i in range(0, len(tokens), 50):
             batch = tokens[i : i + 50]
 
@@ -186,26 +164,15 @@ class AngelOneProvider(YFinanceProvider):
                 if tok:
                     md_map[tok] = item
 
-        # Reverse map: (strike, type) -> market data
-        def _md_for(strike: float, otype: str) -> dict:
-            tok = token_map.get((strike, otype), "")
-            return md_map.get(tok, {})
-
-        # ── Phase 3: merge into OptionContractData ───────────────────────────
+        # Build contracts from instrument master + market data.
+        # implied_vol is left as None — the quant engine solves it from bid/ask/ltp.
         contracts: list[OptionContractData] = []
-        for row in greek_rows:
-            strike = _ff(row.get("strikePrice"))
-            otype  = row.get("optionType", "CE")   # "CE" or "PE"
-            md     = _md_for(strike, otype)
-
-            iv_pct = _ff(row.get("impliedVolatility"))
-            iv     = iv_pct / 100.0 if iv_pct > 0.01 else None
-
-            # bid/ask are in depth.buy[0]/sell[0]; ltp is top-level
+        for (strike, otype), token in token_map.items():
+            md    = md_map.get(token, {})
             depth = md.get("depth") or {}
-            bid = _ff((depth.get("buy")  or [{}])[0].get("price"))
-            ask = _ff((depth.get("sell") or [{}])[0].get("price"))
-            ltp = _ff(md.get("ltp"))
+            bid   = _ff((depth.get("buy")  or [{}])[0].get("price"))
+            ask   = _ff((depth.get("sell") or [{}])[0].get("price"))
+            ltp   = _ff(md.get("ltp"))
 
             contracts.append(OptionContractData(
                 symbol=symbol.upper(),
@@ -215,9 +182,9 @@ class AngelOneProvider(YFinanceProvider):
                 bid=bid,
                 ask=ask,
                 last=ltp,
-                volume=_fi(row.get("tradeVolume")) or _fi(md.get("tradeVolume")),
+                volume=_fi(md.get("tradeVolume")),
                 open_interest=_fi(md.get("opnInterest")),
-                implied_vol=iv if iv and 0.001 < iv < 10.0 else None,
+                implied_vol=None,
             ))
 
         return contracts
