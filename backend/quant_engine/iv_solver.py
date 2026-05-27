@@ -32,7 +32,8 @@ def _brenner_subrahmanyam_guess(market_price: float, S: float, T: float) -> floa
     Accurate for near-ATM options. Gives Newton-Raphson a warm start.
     """
     T_safe = max(T, 1e-10)
-    return max(np.sqrt(2 * np.pi / T_safe) * (market_price / S), 0.01)
+    S_safe = max(S, 1e-10)
+    return max(np.sqrt(2 * np.pi / T_safe) * (market_price / S_safe), 0.01)
 
 
 def _bs_vega_raw(S: float, K: float, T: float, r: float, q: float, sigma: float) -> float:
