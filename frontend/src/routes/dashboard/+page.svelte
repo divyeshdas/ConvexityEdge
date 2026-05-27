@@ -37,14 +37,14 @@
   $: if (browser && $selectedSymbol) load();
 </script>
 
-<div class="flex flex-col h-[calc(100vh-44px)] overflow-auto bg-terminal-bg">
+<div class="flex flex-col h-full overflow-auto bg-terminal-bg">
 
   {#if loading}
     <div class="flex items-center justify-center h-32"><LoadingSpinner label="Loading analytics..." /></div>
   {:else if analytics}
 
     <!-- Metric cards row -->
-    <div class="grid grid-cols-4 lg:grid-cols-8 gap-px border-b border-terminal-border shrink-0">
+    <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-px border-b border-terminal-border shrink-0">
       <MetricCard label="ATM IV" value={analytics.atm_iv ? fmtPct(analytics.atm_iv) : '—'} accent />
       <MetricCard label="IV Rank" value={analytics.iv_rank != null ? `${analytics.iv_rank.toFixed(0)}` : '—'} sub="0–100 percentile" />
       <MetricCard label="HV 30d" value={analytics.hist_vol_30d ? fmtPct(analytics.hist_vol_30d) : '—'} />
@@ -57,7 +57,7 @@
     </div>
 
     <!-- Charts grid -->
-    <div class="grid grid-cols-2 lg:grid-cols-3 gap-px flex-1 min-h-0">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px flex-1 min-h-0">
 
       <!-- IV Smile -->
       <div class="bg-terminal-surface border-r border-b border-terminal-border min-h-48 flex flex-col">

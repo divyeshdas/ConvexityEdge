@@ -16,16 +16,18 @@
   });
 </script>
 
-<div class="flex h-[calc(100vh-44px)] gap-0 overflow-hidden">
-  <!-- Trade panel (left) -->
-  <TradePanel />
+<div class="flex flex-col md:flex-row h-full overflow-hidden">
+  <!-- Trade panel -->
+  <div class="shrink-0 border-b md:border-b-0 md:border-r border-terminal-border overflow-auto max-h-72 md:max-h-none">
+    <TradePanel />
+  </div>
 
   <!-- Right: chart + IV term structure -->
-  <div class="flex-1 flex flex-col overflow-hidden">
-    <div class="flex-1 border-b border-terminal-border overflow-hidden">
+  <div class="flex-1 flex flex-col overflow-hidden min-h-0">
+    <div class="flex-1 border-b border-terminal-border overflow-hidden min-h-0" style="min-height: 200px;">
       <MarketChartPanel symbol={$selectedSymbol} />
     </div>
-    <div class="h-48 bg-terminal-bg overflow-hidden">
+    <div class="h-48 bg-terminal-bg overflow-hidden shrink-0">
       <div class="flex items-center px-3 py-1 border-b border-terminal-border">
         <span class="text-neutral text-xxs uppercase tracking-wider">IV Term Structure — {$selectedSymbol}</span>
       </div>
