@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -12,9 +11,6 @@ from app.core.config import settings
 from app.core.redis import close_redis
 from app.api.v1.router import api_router
 
-# Read CORS origins directly from env to avoid pydantic-settings parsing issues
-_cors_env = os.getenv("CORS_ORIGINS", "")
-_cors_origins = [o.strip() for o in _cors_env.split(",") if o.strip()] or settings.cors_origins
 
 logging.basicConfig(
     level=logging.INFO,
@@ -63,8 +59,8 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=_cors_origins,
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
