@@ -85,7 +85,7 @@ class Settings(BaseSettings):
     risk_free_rate: float = 0.065   # RBI repo rate
     iv_solver_max_iterations: int = 100
     iv_solver_tolerance: float = 1e-6
-    cache_ttl: int = 60
+    cache_ttl: int = 90
 
 
 settings = Settings()
