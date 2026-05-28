@@ -2,34 +2,65 @@
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
-/* ── Terminal base styles ─────────────────────────────────────────────────── */
+/* ── Theme variables ──────────────────────────────────────────────────────── */
+/* Light mode (default) */
 :root {
-  --scrollbar-track: #13161E;
-  --scrollbar-thumb: #252836;
-  --scrollbar-thumb-hover: #3B82F6;
+  --t-bg:       #F7F9FC;
+  --t-surface:  #FFFFFF;
+  --t-panel:    #EEF2F8;
+  --t-border:   #D4DCE8;
+  --t-muted:    #B8C4D4;
+  --t-text:     #0F172A;
+  --t-text-dim: #64748B;
+  --t-atm-bg:   #DBEAFE;
+
+  --scrollbar-track:        #EEF2F8;
+  --scrollbar-thumb:        #C4CFDE;
+  --scrollbar-thumb-hover:  #3B82F6;
 }
 
+/* Dark mode */
+.dark {
+  --t-bg:       #0D0F14;
+  --t-surface:  #13161E;
+  --t-panel:    #1A1D27;
+  --t-border:   #252836;
+  --t-muted:    #2E3245;
+  --t-text:     #F1F5F9;
+  --t-text-dim: #94A3B8;
+  --t-atm-bg:   #1E3A5F;
+
+  --scrollbar-track:        #13161E;
+  --scrollbar-thumb:        #252836;
+  --scrollbar-thumb-hover:  #3B82F6;
+}
+
+/* ── Base text colour ─────────────────────────────────────────────────────── */
+body {
+  color: var(--t-text);
+}
+
+/* In light mode, Tailwind's fixed slate-100/200/300 classes produce near-white
+   text that's invisible on a light background. Override them to dark values. */
+html:not(.dark) .text-slate-100 { color: #1E293B; }
+html:not(.dark) .text-slate-200 { color: #334155; }
+html:not(.dark) .text-slate-300 { color: #475569; }
+
+/* ── Scrollbar ────────────────────────────────────────────────────────────── */
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
-
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track { background: var(--scrollbar-track); }
-::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb);
-  border-radius: 3px;
-}
+::-webkit-scrollbar        { width: 6px; height: 6px; }
+::-webkit-scrollbar-track  { background: var(--scrollbar-track); }
+::-webkit-scrollbar-thumb  { background: var(--scrollbar-thumb); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
 
 /* ── Number formatting ────────────────────────────────────────────────────── */
-.num { font-family: 'JetBrains Mono', monospace; }
-.num-positive { color: #22C55E; }
-.num-negative { color: #EF4444; }
-.num-neutral  { color: #94A3B8; }
+.num           { font-family: 'JetBrains Mono', monospace; }
+.num-positive  { color: #22C55E; }
+.num-negative  { color: #EF4444; }
+.num-neutral   { color: var(--t-text-dim); }
 
 /* ── Terminal table ───────────────────────────────────────────────────────── */
 .terminal-table {
@@ -40,14 +71,14 @@
 }
 
 .terminal-table th {
-  background: #13161E;
-  color: #64748B;
+  background: var(--t-surface);
+  color: var(--t-text-dim);
   font-weight: 500;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   font-size: 0.65rem;
   padding: 6px 8px;
-  border-bottom: 1px solid #252836;
+  border-bottom: 1px solid var(--t-border);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -55,27 +86,27 @@
 
 .terminal-table td {
   padding: 4px 8px;
-  border-bottom: 1px solid #1A1D27;
-  color: #CBD5E1;
+  border-bottom: 1px solid var(--t-panel);
+  color: var(--t-text);
   white-space: nowrap;
 }
 
 .terminal-table tr:hover td {
-  background: #1A1D27;
+  background: var(--t-panel);
 }
 
 .terminal-table .row-atm td {
-  background: #1E3A5F !important;
+  background: var(--t-atm-bg) !important;
   border-top: 1px solid #3B82F6;
   border-bottom: 1px solid #3B82F6;
-  color: #F1F5F9;
+  color: var(--t-text);
   font-weight: 600;
 }
 
 /* ── Stat ticker bar ──────────────────────────────────────────────────────── */
 .stat-bar {
-  background: #13161E;
-  border-bottom: 1px solid #252836;
+  background: var(--t-surface);
+  border-bottom: 1px solid var(--t-border);
   display: flex;
   gap: 0;
   overflow-x: auto;
@@ -87,13 +118,13 @@
   display: flex;
   flex-direction: column;
   padding: 6px 16px;
-  border-right: 1px solid #252836;
+  border-right: 1px solid var(--t-border);
   min-width: fit-content;
 }
 
 .stat-label {
   font-size: 0.65rem;
-  color: #64748B;
+  color: var(--t-text-dim);
   letter-spacing: 0.03em;
   font-family: 'DM Sans', sans-serif;
   font-weight: 500;
@@ -103,7 +134,7 @@
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #F1F5F9;
+  color: var(--t-text);
 }
 
 .stat-value.negative { color: #EF4444; }
@@ -117,15 +148,15 @@
 
 /* ── Panel card ───────────────────────────────────────────────────────────── */
 .panel {
-  background: #13161E;
-  border: 1px solid #252836;
+  background: var(--t-surface);
+  border: 1px solid var(--t-border);
 }
 
 /* ── Trade panel inputs ───────────────────────────────────────────────────── */
 .trade-input {
-  background: #0D0F14;
-  border: 1px solid #252836;
-  color: #F1F5F9;
+  background: var(--t-bg);
+  border: 1px solid var(--t-border);
+  color: var(--t-text);
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.8125rem;
   padding: 5px 8px;
@@ -152,7 +183,7 @@
 
 /* ── Loading shimmer ─────────────────────────────────────────────────────── */
 .shimmer {
-  background: linear-gradient(90deg, #13161E 25%, #1A1D27 50%, #13161E 75%);
+  background: linear-gradient(90deg, var(--t-surface) 25%, var(--t-panel) 50%, var(--t-surface) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
