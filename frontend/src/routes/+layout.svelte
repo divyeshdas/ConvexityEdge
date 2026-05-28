@@ -20,7 +20,7 @@
   $: currentPath = $page.url.pathname;
 </script>
 
-<div class="min-h-screen bg-terminal-bg text-slate-100 flex flex-col">
+<div class="min-h-screen bg-terminal-bg flex flex-col">
   <Navbar />
   <main class="flex-1 min-h-0 overflow-auto pb-14 md:pb-0 md:overflow-hidden">
     <slot />
