@@ -3,6 +3,23 @@ import { browser } from '$app/environment';
 
 type Theme = 'dark' | 'light';
 
+const DARK_VARS: Record<string, string> = {
+  '--t-bg':      '#0D0F14',
+  '--t-surface': '#13161E',
+  '--t-panel':   '#1A1D27',
+  '--t-border':  '#252836',
+  '--t-muted':   '#2E3245',
+  '--t-atm':     '#1E3A5F',
+};
+const LIGHT_VARS: Record<string, string> = {
+  '--t-bg':      '#EBEEF4',
+  '--t-surface': '#F1F4F9',
+  '--t-panel':   '#E4E8F0',
+  '--t-border':  '#C8D0DE',
+  '--t-muted':   '#CBD3E1',
+  '--t-atm':     '#DBEAFE',
+};
+
 // IST = UTC+5:30
 // Light mode: 09:00–15:30 IST (Indian market hours)
 // Dark mode: everything else, or user override
@@ -28,10 +45,10 @@ function createThemeStore() {
   function apply(t: Theme) {
     if (!browser) return;
     const root = document.documentElement;
-    if (t === 'dark') {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
+    root.classList.toggle('dark', t === 'dark');
+    const vars = t === 'dark' ? DARK_VARS : LIGHT_VARS;
+    for (const [k, v] of Object.entries(vars)) {
+      root.style.setProperty(k, v);
     }
     localStorage.setItem('ce_theme', t);
   }

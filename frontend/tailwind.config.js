@@ -5,13 +5,13 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Terminal background layers (dark-mode values — light mode overridden in app.css)
+        // Terminal background layers — JS sets these CSS vars in theme.ts apply()
         terminal: {
-          bg:      '#0D0F14',
-          surface: '#13161E',
-          panel:   '#1A1D27',
-          border:  '#252836',
-          muted:   '#2E3245',
+          bg:      'var(--t-bg)',
+          surface: 'var(--t-surface)',
+          panel:   'var(--t-panel)',
+          border:  'var(--t-border)',
+          muted:   'var(--t-muted)',
         },
         // Data colours
         up:       '#22C55E',
@@ -20,7 +20,7 @@ export default {
         accent:   '#3B82F6',
         warning:  '#F59E0B',
         // ATM highlight
-        atm:      '#1E3A5F',
+        atm:      'var(--t-atm)',
         'atm-border': '#3B82F6',
         // Greeks
         delta:    '#60A5FA',

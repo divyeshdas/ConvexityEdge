@@ -2,8 +2,14 @@
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
-/* ── Scrollbar ────────────────────────────────────────────────────────────── */
+/* ── Theme CSS variables (dark-mode defaults; JS overrides these on the fly) ─ */
 :root {
+  --t-bg:      #0D0F14;
+  --t-surface: #13161E;
+  --t-panel:   #1A1D27;
+  --t-border:  #252836;
+  --t-muted:   #2E3245;
+  --t-atm:     #1E3A5F;
   --scrollbar-track:        #13161E;
   --scrollbar-thumb:        #252836;
   --scrollbar-thumb-hover:  #3B82F6;
@@ -29,32 +35,13 @@ html:not(.dark) {
 /* Don't animate things that shouldn't — charts, transforms, shadows */
 svg *, canvas, .num { transition: none; }
 
-/* ── Light-mode overrides for Tailwind terminal color classes ─────────────── */
-/*
-  Palette: layered blue-gray — NOT pure white, easy on eyes.
-    bg:      #EBEEF4  main page background
-    surface: #F1F4F9  cards, navbar, table headers
-    panel:   #E4E8F0  slightly darker panels
-    border:  #C8D0DE  subtle borders
-
-  Specificity (0,2,1) beats Tailwind utilities (0,1,0) — no !important needed.
-*/
-html:not(.dark) .bg-terminal-bg      { background-color: #EBEEF4; }
-html:not(.dark) .bg-terminal-surface { background-color: #F1F4F9; }
-html:not(.dark) .bg-terminal-panel   { background-color: #E4E8F0; }
-html:not(.dark) .bg-terminal-muted   { background-color: #CBD3E1; }
-html:not(.dark) .bg-atm              { background-color: #DBEAFE; }
-
-html:not(.dark) .border-terminal-border { border-color: #C8D0DE; }
-html:not(.dark) .border-terminal-muted  { border-color: #CBD3E1; }
-
-/* Near-white slate text is invisible on a light background — remap to dark */
+/* ── Light-mode text fixes ────────────────────────────────────────────────── */
+/* Terminal bg/border/surface colours are handled by JS-set CSS variables.
+   Tailwind's fixed slate palette is invisible on light bg — remap to dark. */
 html:not(.dark) .text-slate-100 { color: #1E293B; }
 html:not(.dark) .text-slate-200 { color: #334155; }
 html:not(.dark) .text-slate-300 { color: #475569; }
 html:not(.dark) .text-neutral   { color: #5A6A80; }
-
-/* Base text */
 html:not(.dark) body { color: #0F172A; }
 
 /* ── Number formatting ────────────────────────────────────────────────────── */
