@@ -39,7 +39,7 @@
         <th class="text-right text-slate-300 !text-xxs">ASK</th>
 
         <!-- STRIKE -->
-        <th class="text-center !text-xs text-slate-300 font-semibold bg-terminal-bg/50">STRIKE</th>
+        <th class="text-center !text-xs text-slate-300 font-semibold bg-terminal-panel">STRIKE</th>
 
         <!-- PUTS header -->
         <th class="text-left text-slate-300 !text-xxs pl-2">BID</th>
@@ -56,7 +56,7 @@
         <th colspan="8" class="text-center text-slate-400 !text-xxs pb-1 tracking-widest uppercase">
           — CALLS —
         </th>
-        <th class="bg-terminal-bg/30"></th>
+        <th class="bg-terminal-panel opacity-60"></th>
         <th colspan="8" class="text-center text-slate-400 !text-xxs pb-1 tracking-widest uppercase">
           — PUTS —
         </th>

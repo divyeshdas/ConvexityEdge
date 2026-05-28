@@ -3,6 +3,7 @@
   import { browser } from '$app/environment';
   import { marketApi } from '$api/client';
   import { CHART_COLORS } from '$utils/colors';
+  import { theme } from '$stores/theme';
   import type { OHLCBar } from '$api/types';
 
   export let symbol: string;
@@ -50,8 +51,9 @@
       return slice.reduce((s, b) => s + b.close, 0) / 50;
     });
 
+    const isDark = $theme === 'dark';
     chart.setOption({
-      backgroundColor: '#0D0F14',
+      backgroundColor: isDark ? '#0D0F14' : '#F1F4F9',
       animation: false,
       grid: [
         { left: 60, right: 60, top: 10, bottom: 80 },
@@ -148,6 +150,7 @@
 
   $: if (browser && symbol) loadData();
   $: if (browser && period && chart) loadData();
+  $: if (browser && $theme && chart) renderChart();
 </script>
 
 <div class="flex flex-col h-full bg-terminal-bg">
