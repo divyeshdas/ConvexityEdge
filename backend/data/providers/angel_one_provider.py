@@ -110,8 +110,12 @@ class AngelOneProvider(YFinanceProvider):
     # ── Provider interface ────────────────────────────────────────────────────
 
     async def get_quote(self, symbol: str) -> QuoteData:
-        await self._ensure_auth()
-        await self._ensure_instruments()
+        try:
+            await self._ensure_auth()
+            await self._ensure_instruments()
+        except Exception as exc:
+            logger.warning("Angel One init failed for get_quote(%s), falling back: %s", symbol, exc)
+            return await super().get_quote(symbol)
 
         token = self._find_nse_equity_token(symbol)
         if not token:
@@ -119,11 +123,18 @@ class AngelOneProvider(YFinanceProvider):
             return await super().get_quote(symbol)
 
         for attempt in range(2):
-            def _fetch():
-                result = self._obj.getMarketData("FULL", {"NSE": [token]})
-                return result
+            try:
+                def _fetch():
+                    result = self._obj.getMarketData("FULL", {"NSE": [token]})
+                    return result
 
-            result = await _run_sync(_fetch)
+                result = await _run_sync(_fetch)
+            except Exception as exc:
+                logger.warning("getMarketData raised for %s: %s", symbol, exc)
+                if attempt == 0:
+                    await self._force_reauth()
+                continue
+
             if result.get("status"):
                 fetched = (result.get("data") or {}).get("fetched") or []
                 if fetched:
@@ -150,8 +161,12 @@ class AngelOneProvider(YFinanceProvider):
         return await super().get_quote(symbol)
 
     async def get_ohlc(self, symbol: str, period: str = "3mo", interval: str = "1d") -> list[OHLCBar]:
-        await self._ensure_auth()
-        await self._ensure_instruments()
+        try:
+            await self._ensure_auth()
+            await self._ensure_instruments()
+        except Exception as exc:
+            logger.warning("Angel One init failed for get_ohlc(%s), falling back: %s", symbol, exc)
+            return await super().get_ohlc(symbol, period, interval)
 
         token = self._find_nse_equity_token(symbol)
         if not token:
@@ -197,7 +212,11 @@ class AngelOneProvider(YFinanceProvider):
         return await super().get_ohlc(symbol, period, interval)
 
     async def get_expiries(self, symbol: str) -> list[datetime.date]:
-        await self._ensure_instruments()
+        try:
+            await self._ensure_instruments()
+        except Exception as exc:
+            logger.warning("Angel One instrument load failed for get_expiries(%s): %s", symbol, exc)
+            return []
         today = datetime.date.today()
         seen: set[str] = set()
         dates: list[datetime.date] = []
@@ -225,8 +244,12 @@ class AngelOneProvider(YFinanceProvider):
         symbol: str,
         expiry: datetime.date,
     ) -> list[OptionContractData]:
-        await self._ensure_auth()
-        await self._ensure_instruments()
+        try:
+            await self._ensure_auth()
+            await self._ensure_instruments()
+        except Exception as exc:
+            logger.warning("Angel One init failed for get_option_chain(%s), returning empty: %s", symbol, exc)
+            return []
 
         # Build token lookup from instrument master
         token_map: dict[tuple[float, str], str] = {}
