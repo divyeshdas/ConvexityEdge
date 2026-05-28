@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 from app.core.redis import cache_get, cache_set, make_cache_key
 from app.core.config import settings
@@ -13,21 +14,27 @@ async def get_dashboard_analytics(symbol: str) -> dict:
         return cached
 
     provider = get_provider()
-    quote    = await provider.get_quote(symbol)
-    expiries = await provider.get_expiries(symbol)
+
+    # Fetch quote and expiries in parallel
+    quote, expiries = await asyncio.gather(
+        provider.get_quote(symbol),
+        provider.get_expiries(symbol),
+    )
 
     if not expiries:
         return {}
 
-    # Use nearest expiry for dashboard
     today  = datetime.date.today()
     expiry = min(expiries, key=lambda e: (e - today).days if (e - today).days > 0 else 999)
 
-    contracts = await provider.get_option_chain(symbol, expiry)
-    enriched  = enrich_chain(contracts, quote.price, settings.risk_free_rate, 0.0)
+    # Fetch option chain and historical prices in parallel
+    contracts, close_prices = await asyncio.gather(
+        provider.get_option_chain(symbol, expiry),
+        provider.get_close_prices(symbol, days=60),
+    )
 
-    close_prices = await provider.get_close_prices(symbol, days=60)
-    hist_vol     = compute_historical_vol(close_prices, window=30)
+    enriched = enrich_chain(contracts, quote.price, settings.risk_free_rate, 0.0)
+    hist_vol = compute_historical_vol(close_prices, window=30)
 
     result = compute_dashboard_analytics(enriched, quote.price, hist_vol=hist_vol)
     result["symbol"]     = symbol.upper()

@@ -52,8 +52,7 @@ def _nse(symbol: str) -> str:
 
 
 def _run_sync(fn):
-    loop = asyncio.get_event_loop()
-    return loop.run_in_executor(None, fn)
+    return asyncio.get_running_loop().run_in_executor(None, fn)
 
 
 class YFinanceProvider(MarketDataProvider):

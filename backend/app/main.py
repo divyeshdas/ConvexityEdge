@@ -24,10 +24,25 @@ logger = logging.getLogger("convexityedge")
 async def lifespan(app: FastAPI):
     logger.info("ConvexityEdge backend starting...")
 
-    # Start background data refresh loop
     from app.core.database import AsyncSessionLocal
     from app.core.redis import get_redis
-    from data.pipeline import run_refresh_loop
+    from data.pipeline import get_provider, run_refresh_loop
+
+    # Pre-warm: kick off instrument download + auth in background so first
+    # user request doesn't have to wait for either.
+    async def _prewarm():
+        try:
+            provider = get_provider()
+            await asyncio.gather(
+                provider._ensure_instruments(),
+                provider._ensure_auth(),
+                return_exceptions=True,
+            )
+            logger.info("Provider pre-warm complete")
+        except Exception as exc:
+            logger.warning("Provider pre-warm failed (non-fatal): %s", exc)
+
+    asyncio.create_task(_prewarm())
 
     try:
         redis = await get_redis()

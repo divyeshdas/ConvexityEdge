@@ -39,8 +39,13 @@ async def get_option_chain(
     except ValueError:
         return None
 
-    quote     = await provider.get_quote(symbol)
-    contracts = await provider.get_option_chain(symbol, expiry)
+    import asyncio as _aio
+    # Fetch quote, chain, and close prices in parallel — saves ~2-3s per request
+    quote, contracts, close_prices = await _aio.gather(
+        provider.get_quote(symbol),
+        provider.get_option_chain(symbol, expiry),
+        provider.get_close_prices(symbol, days=60),
+    )
     enriched  = enrich_chain(contracts, quote.price, settings.risk_free_rate, 0.0)
 
     dte = (expiry - datetime.date.today()).days
@@ -89,7 +94,6 @@ async def get_option_chain(
     iv_changes = [c["iv_change_1d"] for c in enriched if c.get("iv_change_1d") is not None]
 
     from quant_engine.iv_surface import compute_historical_vol
-    close_prices = await provider.get_close_prices(symbol, days=60)
     hist_vol = compute_historical_vol(close_prices, window=30)
 
     chain_data = {
