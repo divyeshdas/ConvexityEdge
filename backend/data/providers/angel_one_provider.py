@@ -1,28 +1,18 @@
 """
 Angel One SmartAPI-backed provider for NSE F&O data.
-
-Uses the official smartapi-python SDK which auto-detects the correct public IP
-and MAC address required by Angel One's WAF.
-
-Inherits YFinanceProvider for quotes, OHLC, and symbol search.
-Overrides get_expiries and get_option_chain with Angel One API.
-
-Setup (add to backend/.env):
-  MARKET_DATA_PROVIDER=angel_one
-  ANGEL_ONE_API_KEY=<from smartapi.angelbroking.com developer portal>
-  ANGEL_ONE_CLIENT_CODE=<your Angel One client ID, e.g. A12345>
-  ANGEL_ONE_PASSWORD=<your 4-digit trading PIN>
-  ANGEL_ONE_TOTP_SECRET=<base32 TOTP secret from 2FA setup>
 """
 
 import asyncio
 import datetime
+import logging
 
 import pyotp
 
 from app.core.config import settings
-from data.providers.base import OptionContractData, OHLCBar
+from data.providers.base import OptionContractData, OHLCBar, QuoteData
 from data.providers.yfinance_provider import YFinanceProvider, _ff, _fi, _run_sync
+
+logger = logging.getLogger(__name__)
 
 _INTERVAL_MAP = {
     "1m": "ONE_MINUTE", "5m": "FIVE_MINUTE", "15m": "FIFTEEN_MINUTE",
@@ -44,14 +34,10 @@ def _make_sdk():
 
 
 class AngelOneProvider(YFinanceProvider):
-    """
-    NSE F&O option chain via Angel One SmartAPI.
-    Quotes and OHLC continue to use yfinance.
-    """
 
     def __init__(self):
         super().__init__()
-        self._obj = None                    # SmartConnect instance
+        self._obj = None
         self._session_valid = False
         self._auth_lock  = asyncio.Lock()
         self._instr_lock = asyncio.Lock()
@@ -61,7 +47,6 @@ class AngelOneProvider(YFinanceProvider):
     # ── Authentication ────────────────────────────────────────────────────────
 
     def _do_login(self):
-        """Synchronous login — called inside thread pool."""
         if self._obj is None:
             self._obj = _make_sdk()
         totp = pyotp.TOTP(settings.angel_one_totp_secret).now()
@@ -73,6 +58,7 @@ class AngelOneProvider(YFinanceProvider):
         if not resp.get("status"):
             raise RuntimeError(f"Angel One login failed: {resp.get('message', resp)}")
         self._session_valid = True
+        logger.info("Angel One session refreshed")
 
     async def _ensure_auth(self):
         if self._session_valid:
@@ -82,10 +68,15 @@ class AngelOneProvider(YFinanceProvider):
                 return
             await _run_sync(self._do_login)
 
+    async def _force_reauth(self):
+        """Invalidate session and re-login. Called when an API returns status=False."""
+        self._session_valid = False
+        async with self._auth_lock:
+            await _run_sync(self._do_login)
+
     # ── Instrument master ─────────────────────────────────────────────────────
 
     def _load_instruments(self):
-        """Download instrument master synchronously."""
         import urllib.request, json
         with urllib.request.urlopen(_INST_URL, timeout=60) as r:
             self._instruments = json.loads(r.read().decode())
@@ -99,64 +90,70 @@ class AngelOneProvider(YFinanceProvider):
                 return
             await _run_sync(self._load_instruments)
 
+    # ── Equity token lookup ───────────────────────────────────────────────────
+
+    def _find_nse_equity_token(self, symbol: str) -> str | None:
+        """Find NSE equity token. Matches on symbol field (most reliable for equities)."""
+        sym = symbol.upper()
+        for entry in self._instruments:
+            if entry.get("exch_seg") != "NSE":
+                continue
+            # NSE equities: instrumenttype is "" or "EQ"
+            if entry.get("instrumenttype", "") not in ("", "EQ"):
+                continue
+            if entry.get("symbol", "").upper() == sym or entry.get("name", "").upper() == sym:
+                token = entry.get("token", "")
+                if token:
+                    return token
+        return None
+
     # ── Provider interface ────────────────────────────────────────────────────
 
-    async def get_quote(self, symbol: str):
+    async def get_quote(self, symbol: str) -> QuoteData:
         await self._ensure_auth()
         await self._ensure_instruments()
 
-        # Find NSE equity token from instrument master
-        token = None
-        for entry in self._instruments:
-            if (
-                entry.get("name", "").upper() == symbol.upper() and
-                entry.get("exch_seg") == "NSE"
-            ):
-                token = entry.get("token", "")
-                if token:
-                    break
-
+        token = self._find_nse_equity_token(symbol)
         if not token:
+            logger.warning("No NSE equity token for %s, falling back to yfinance", symbol)
             return await super().get_quote(symbol)
 
-        def _fetch():
-            result = self._obj.getMarketData("FULL", {"NSE": [token]})
-            if not result.get("status"):
-                return None
-            fetched = (result.get("data") or {}).get("fetched") or []
-            return fetched[0] if fetched else None
+        for attempt in range(2):
+            def _fetch():
+                result = self._obj.getMarketData("FULL", {"NSE": [token]})
+                return result
 
-        md = await _run_sync(_fetch)
-        if not md:
-            return await super().get_quote(symbol)
+            result = await _run_sync(_fetch)
+            if result.get("status"):
+                fetched = (result.get("data") or {}).get("fetched") or []
+                if fetched:
+                    md = fetched[0]
+                    ltp   = _ff(md.get("ltp"))
+                    close = _ff(md.get("close"))
+                    change     = ltp - close
+                    change_pct = (change / close) if close else 0.0
+                    return QuoteData(
+                        symbol=symbol.upper(),
+                        price=ltp,
+                        change=change,
+                        change_pct=change_pct,
+                        volume=_fi(md.get("tradeVolume")),
+                        market_cap=None,
+                        timestamp=datetime.datetime.utcnow(),
+                    )
+            # status=False → session likely expired, re-auth and retry
+            if attempt == 0:
+                logger.warning("getMarketData failed for %s, re-authenticating...", symbol)
+                await self._force_reauth()
 
-        from data.providers.base import QuoteData
-        ltp   = _ff(md.get("ltp"))
-        close = _ff(md.get("close"))
-        change     = ltp - close
-        change_pct = (change / close) if close else 0.0
-
-        return QuoteData(
-            symbol=symbol.upper(),
-            price=ltp,
-            change=change,
-            change_pct=change_pct,
-            volume=_fi(md.get("tradeVolume")),
-            market_cap=None,
-            timestamp=datetime.datetime.utcnow(),
-        )
+        logger.warning("getMarketData failed after reauth for %s, falling back", symbol)
+        return await super().get_quote(symbol)
 
     async def get_ohlc(self, symbol: str, period: str = "3mo", interval: str = "1d") -> list[OHLCBar]:
         await self._ensure_auth()
         await self._ensure_instruments()
 
-        token = None
-        for entry in self._instruments:
-            if entry.get("name", "").upper() == symbol.upper() and entry.get("exch_seg") == "NSE":
-                token = entry.get("token", "")
-                if token:
-                    break
-
+        token = self._find_nse_equity_token(symbol)
         if not token:
             return await super().get_ohlc(symbol, period, interval)
 
@@ -166,35 +163,38 @@ class AngelOneProvider(YFinanceProvider):
         fromdate = (today - datetime.timedelta(days=days)).strftime("%Y-%m-%d 09:15")
         todate = today.strftime("%Y-%m-%d 15:30")
 
-        def _fetch():
-            result = self._obj.getCandleData({
-                "exchange": "NSE",
-                "symboltoken": token,
-                "interval": ao_interval,
-                "fromdate": fromdate,
-                "todate": todate,
-            })
-            if not result.get("status"):
-                return []
-            return result.get("data") or []
+        for attempt in range(2):
+            def _fetch():
+                return self._obj.getCandleData({
+                    "exchange": "NSE",
+                    "symboltoken": token,
+                    "interval": ao_interval,
+                    "fromdate": fromdate,
+                    "todate": todate,
+                })
 
-        rows = await _run_sync(_fetch)
-        bars = []
-        for row in rows:
-            try:
-                # row = [timestamp, open, high, low, close, volume]
-                ts = datetime.datetime.fromisoformat(row[0].replace("T", " ").split("+")[0])
-                bars.append(OHLCBar(
-                    time=ts,
-                    open=_ff(row[1]),
-                    high=_ff(row[2]),
-                    low=_ff(row[3]),
-                    close=_ff(row[4]),
-                    volume=_fi(row[5]),
-                ))
-            except Exception:
-                continue
-        return bars
+            result = await _run_sync(_fetch)
+            if result.get("status"):
+                rows = result.get("data") or []
+                bars = []
+                for row in rows:
+                    try:
+                        ts = datetime.datetime.fromisoformat(row[0].replace("T", " ").split("+")[0])
+                        bars.append(OHLCBar(
+                            time=ts,
+                            open=_ff(row[1]), high=_ff(row[2]),
+                            low=_ff(row[3]),  close=_ff(row[4]),
+                            volume=_fi(row[5]),
+                        ))
+                    except Exception:
+                        continue
+                return bars
+
+            if attempt == 0:
+                logger.warning("getCandleData failed for %s, re-authenticating...", symbol)
+                await self._force_reauth()
+
+        return await super().get_ohlc(symbol, period, interval)
 
     async def get_expiries(self, symbol: str) -> list[datetime.date]:
         await self._ensure_instruments()
@@ -228,7 +228,7 @@ class AngelOneProvider(YFinanceProvider):
         await self._ensure_auth()
         await self._ensure_instruments()
 
-        # Build token lookup from instrument master: (strike, CE/PE) -> token
+        # Build token lookup from instrument master
         token_map: dict[tuple[float, str], str] = {}
         for entry in self._instruments:
             if (
@@ -253,25 +253,32 @@ class AngelOneProvider(YFinanceProvider):
 
         tokens = [t for t in token_map.values() if t]
 
-        # Batch market data requests (Angel One limit: 50 tokens per call)
+        # Fetch market data with re-auth retry
         md_map: dict[str, dict] = {}
-        for i in range(0, len(tokens), 50):
-            batch = tokens[i : i + 50]
+        for attempt in range(2):
+            md_map = {}
+            failed = False
+            for i in range(0, len(tokens), 50):
+                batch = tokens[i : i + 50]
 
-            def _fetch_md(b=batch):
-                result = self._obj.getMarketData("FULL", {"NFO": b})
+                def _fetch_md(b=batch):
+                    return self._obj.getMarketData("FULL", {"NFO": b})
+
+                result = await _run_sync(_fetch_md)
                 if not result.get("status"):
-                    return []
-                return result.get("data", {}).get("fetched") or []
+                    failed = True
+                    break
+                for item in (result.get("data", {}).get("fetched") or []):
+                    tok = str(item.get("symbolToken", ""))
+                    if tok:
+                        md_map[tok] = item
 
-            fetched = await _run_sync(_fetch_md)
-            for item in fetched:
-                tok = str(item.get("symbolToken", ""))
-                if tok:
-                    md_map[tok] = item
+            if not failed:
+                break
+            if attempt == 0:
+                logger.warning("getMarketData (NFO) failed, re-authenticating...")
+                await self._force_reauth()
 
-        # Build contracts from instrument master + market data.
-        # implied_vol is left as None — the quant engine solves it from bid/ask/ltp.
         contracts: list[OptionContractData] = []
         for (strike, otype), token in token_map.items():
             md    = md_map.get(token, {})
