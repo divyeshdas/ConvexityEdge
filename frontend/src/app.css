@@ -22,24 +22,37 @@ html:not(.dark) {
 ::-webkit-scrollbar-thumb  { background: var(--scrollbar-thumb); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
 
-/* ── Light-mode overrides for Tailwind terminal color classes ─────────────── */
-/* These fire when <html> does NOT have class="dark".
-   Specificity (0,2,1) beats Tailwind utilities (0,1,0) — no !important needed. */
+/* ── Smooth theme transition ──────────────────────────────────────────────── */
+*, *::before, *::after {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease;
+}
+/* Don't animate things that shouldn't — charts, transforms, shadows */
+svg *, canvas, .num { transition: none; }
 
-html:not(.dark) .bg-terminal-bg      { background-color: #F7F9FC; }
-html:not(.dark) .bg-terminal-surface { background-color: #FFFFFF; }
-html:not(.dark) .bg-terminal-panel   { background-color: #EEF2F8; }
-html:not(.dark) .bg-terminal-muted   { background-color: #C8D3E0; }
+/* ── Light-mode overrides for Tailwind terminal color classes ─────────────── */
+/*
+  Palette: layered blue-gray — NOT pure white, easy on eyes.
+    bg:      #EBEEF4  main page background
+    surface: #F1F4F9  cards, navbar, table headers
+    panel:   #E4E8F0  slightly darker panels
+    border:  #C8D0DE  subtle borders
+
+  Specificity (0,2,1) beats Tailwind utilities (0,1,0) — no !important needed.
+*/
+html:not(.dark) .bg-terminal-bg      { background-color: #EBEEF4; }
+html:not(.dark) .bg-terminal-surface { background-color: #F1F4F9; }
+html:not(.dark) .bg-terminal-panel   { background-color: #E4E8F0; }
+html:not(.dark) .bg-terminal-muted   { background-color: #CBD3E1; }
 html:not(.dark) .bg-atm              { background-color: #DBEAFE; }
 
-html:not(.dark) .border-terminal-border { border-color: #D4DCE8; }
-html:not(.dark) .border-terminal-muted  { border-color: #C8D3E0; }
+html:not(.dark) .border-terminal-border { border-color: #C8D0DE; }
+html:not(.dark) .border-terminal-muted  { border-color: #CBD3E1; }
 
-/* Near-white slate text is invisible on a light background — override to dark */
+/* Near-white slate text is invisible on a light background — remap to dark */
 html:not(.dark) .text-slate-100 { color: #1E293B; }
 html:not(.dark) .text-slate-200 { color: #334155; }
 html:not(.dark) .text-slate-300 { color: #475569; }
-html:not(.dark) .text-neutral   { color: #64748B; }
+html:not(.dark) .text-neutral   { color: #5A6A80; }
 
 /* Base text */
 html:not(.dark) body { color: #0F172A; }
@@ -87,15 +100,15 @@ html:not(.dark) body { color: #0F172A; }
 
 /* Light-mode table overrides */
 html:not(.dark) .terminal-table th {
-  background: #F1F5F9;
+  background: #E4E8F0;
   color: #475569;
-  border-bottom-color: #D4DCE8;
+  border-bottom-color: #C8D0DE;
 }
 html:not(.dark) .terminal-table td {
-  border-bottom-color: #EEF2F8;
+  border-bottom-color: #E4E8F0;
   color: #1E293B;
 }
-html:not(.dark) .terminal-table tr:hover td { background: #EEF2F8; }
+html:not(.dark) .terminal-table tr:hover td { background: #E4E8F0; }
 html:not(.dark) .terminal-table .row-atm td {
   background: #DBEAFE !important;
   color: #1E3A5F;
@@ -112,8 +125,8 @@ html:not(.dark) .terminal-table .row-atm td {
 }
 .stat-bar::-webkit-scrollbar { display: none; }
 html:not(.dark) .stat-bar {
-  background: #FFFFFF;
-  border-bottom-color: #D4DCE8;
+  background: #F1F4F9;
+  border-bottom-color: #C8D0DE;
 }
 
 .stat-item {
@@ -123,7 +136,7 @@ html:not(.dark) .stat-bar {
   border-right: 1px solid #252836;
   min-width: fit-content;
 }
-html:not(.dark) .stat-item { border-right-color: #D4DCE8; }
+html:not(.dark) .stat-item { border-right-color: #C8D0DE; }
 
 .stat-label {
   font-size: 0.65rem;
@@ -167,8 +180,8 @@ html:not(.dark) .panel { background: #FFFFFF; border-color: #D4DCE8; }
 }
 .trade-input:focus { border-color: #3B82F6; }
 html:not(.dark) .trade-input {
-  background: #F7F9FC;
-  border-color: #D4DCE8;
+  background: #EBEEF4;
+  border-color: #C8D0DE;
   color: #0F172A;
 }
 
