@@ -12,7 +12,7 @@ const DARK_VARS: Record<string, string> = {
   '--t-atm':     '#1E3A5F',
 };
 const LIGHT_VARS: Record<string, string> = {
-  '--t-bg':      '#EBEEF4',
+  '--t-bg':      '#F8F5F0',
   '--t-surface': '#F1F4F9',
   '--t-panel':   '#E4E8F0',
   '--t-border':  '#C8D0DE',
