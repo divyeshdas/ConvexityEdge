@@ -37,12 +37,14 @@ Built on Black-Scholes theory — live implied volatility, Greeks, IV surface, s
 
 ## Quant Engine
 
-The IV solver uses a two-stage approach:
+Option pricing is based on the **Black-Scholes model** (with continuous dividend yield). All pricing and Greeks are computed in vectorised NumPy batches across the full chain — no Python loops.
+
+**Implied Volatility solver** — two-stage approach:
 
 1. **Newton-Raphson** with a Brenner-Subrahmanyam (1988) warm-start guess — converges in 3–5 iterations for most options
 2. **Brent's method** fallback — guaranteed convergence when vega is near zero or Newton-Raphson diverges
 
-Greeks (Delta, Gamma, Vega, Theta, Rho) are computed in a vectorised NumPy batch across the full chain for performance. The IV surface is built from the enriched chain and can be visualised as a 3D mesh.
+**Greeks** (Delta, Gamma, Vega, Theta, Rho) are derived analytically from the Black-Scholes closed-form formulas. The IV surface is built from the enriched chain and visualised as a 3D mesh.
 
 ---
 
