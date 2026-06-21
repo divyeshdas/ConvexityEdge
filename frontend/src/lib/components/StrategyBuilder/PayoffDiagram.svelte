@@ -27,7 +27,7 @@
         trigger: 'axis',
         backgroundColor: CHART_COLORS.tooltip_bg,
         borderColor: CHART_COLORS.tooltip_border,
-        textStyle: { color: '#CBD5E1', fontSize: 11, fontFamily: 'JetBrains Mono' },
+        textStyle: { color: '#CBD5E1', fontSize: 11, fontFamily: 'Inter' },
         formatter: (params: any) => {
           const price = params[0]?.axisValue;
           const pnl   = params[0]?.data;
@@ -36,14 +36,14 @@
       },
       xAxis: {
         type: 'category', data: prices.map(p => p.toFixed(0)),
-        axisLabel: { color: '#64748B', fontSize: 9, fontFamily: 'JetBrains Mono', interval: Math.floor(prices.length / 8) },
+        axisLabel: { color: '#64748B', fontSize: 9, fontFamily: 'Inter', interval: Math.floor(prices.length / 8) },
         axisLine: { lineStyle: { color: '#252836' } },
         splitLine: { show: false },
       },
       yAxis: {
         type: 'value',
         axisLabel: {
-          color: '#64748B', fontSize: 9, fontFamily: 'JetBrains Mono',
+          color: '#64748B', fontSize: 9, fontFamily: 'Inter',
           formatter: (v: number) => `₹${v.toFixed(0)}`,
         },
         axisLine: { lineStyle: { color: '#252836' } },
@@ -75,12 +75,12 @@
               {
                 xAxis: prices.findIndex(p => Math.abs(p - underlying) < (prices[1] - prices[0]) * 1.5),
                 lineStyle: { color: '#3B82F6', type: 'dashed', width: 1 },
-                label: { show: true, formatter: 'Spot', color: '#3B82F6', fontSize: 9, fontFamily: 'JetBrains Mono' },
+                label: { show: true, formatter: 'Spot', color: '#3B82F6', fontSize: 9, fontFamily: 'Inter' },
               },
               ...result.break_evens.map(be => ({
                 xAxis: prices.findIndex(p => Math.abs(p - be) < (prices[1] - prices[0]) * 1.5),
                 lineStyle: { color: '#F59E0B', type: 'dashed', width: 1 },
-                label: { show: true, formatter: `BE ₹${be}`, color: '#F59E0B', fontSize: 9, fontFamily: 'JetBrains Mono' },
+                label: { show: true, formatter: `BE ₹${be}`, color: '#F59E0B', fontSize: 9, fontFamily: 'Inter' },
               })),
             ],
           },

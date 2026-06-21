@@ -21,12 +21,12 @@
             trigger: 'axis',
             backgroundColor: CHART_COLORS.tooltip_bg,
             borderColor: CHART_COLORS.tooltip_border,
-            textStyle: { color: '#CBD5E1', fontSize: 11, fontFamily: 'JetBrains Mono' },
+            textStyle: { color: '#CBD5E1', fontSize: 11, fontFamily: 'Inter' },
           },
           xAxis: {
             type: 'value', name: 'DTE',
             nameTextStyle: { color: '#475569', fontSize: 10 },
-            axisLabel: { color: '#64748B', fontSize: 10, fontFamily: 'JetBrains Mono' },
+            axisLabel: { color: '#64748B', fontSize: 10, fontFamily: 'Inter' },
             axisLine: { lineStyle: { color: '#252836' } },
             splitLine: { lineStyle: { color: '#1A1D27' } },
           },
@@ -34,7 +34,7 @@
             type: 'value', name: 'ATM IV',
             nameTextStyle: { color: '#475569', fontSize: 10 },
             axisLabel: {
-              color: '#64748B', fontSize: 10, fontFamily: 'JetBrains Mono',
+              color: '#64748B', fontSize: 10, fontFamily: 'Inter',
               formatter: (v: number) => `${(v*100).toFixed(0)}%`,
             },
             axisLine: { lineStyle: { color: '#252836' } },
@@ -49,7 +49,7 @@
             symbol: 'circle', symbolSize: 5,
             label: {
               show: true, position: 'top',
-              color: '#94A3B8', fontSize: 9, fontFamily: 'JetBrains Mono',
+              color: '#94A3B8', fontSize: 9, fontFamily: 'Inter',
               formatter: (p: any) => `${(p.data[1]*100).toFixed(0)}%`,
             },
           }],

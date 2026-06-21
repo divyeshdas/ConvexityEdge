@@ -8,6 +8,7 @@
 
   export let symbol: string;
 
+  let wrapperEl: HTMLDivElement;
   let chartEl: HTMLDivElement;
   let chart: any;
   let bars: OHLCBar[] = [];
@@ -25,26 +26,24 @@
       console.error('Chart load failed', e);
     } finally {
       loading = false;
-      // Canvas was hidden while loading; give DOM one frame to show it then resize
-      setTimeout(() => chart?.resize(), 50);
     }
   }
 
   function renderChart() {
     if (!chart || !bars.length) return;
 
+    chart.resize();
+
     const dates   = bars.map(b => new Date(b.time * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
     const ohlc    = bars.map(b => [b.open, b.close, b.low, b.high]);
     const volumes = bars.map(b => b.volume);
 
-    // 20-day MA
     const ma20 = bars.map((_, i) => {
       if (i < 19) return null;
       const slice = bars.slice(i - 19, i + 1);
       return slice.reduce((s, b) => s + b.close, 0) / 20;
     });
 
-    // 50-day MA
     const ma50 = bars.map((_, i) => {
       if (i < 49) return null;
       const slice = bars.slice(i - 49, i + 1);
@@ -69,7 +68,7 @@
         {
           type: 'category', data: dates, gridIndex: 1,
           axisLine: { lineStyle: { color: CHART_COLORS.axis } },
-          axisLabel: { color: '#475569', fontSize: 10, fontFamily: 'JetBrains Mono' },
+          axisLabel: { color: '#475569', fontSize: 10, fontFamily: 'Inter' },
           splitLine: { show: false },
         },
       ],
@@ -77,13 +76,13 @@
         {
           gridIndex: 0, scale: true,
           axisLine: { lineStyle: { color: CHART_COLORS.axis } },
-          axisLabel: { color: '#64748B', fontSize: 10, fontFamily: 'JetBrains Mono' },
+          axisLabel: { color: '#64748B', fontSize: 10, fontFamily: 'Inter' },
           splitLine: { lineStyle: { color: CHART_COLORS.grid } },
         },
         {
           gridIndex: 1, scale: true,
           axisLine: { lineStyle: { color: CHART_COLORS.axis } },
-          axisLabel: { color: '#64748B', fontSize: 9, fontFamily: 'JetBrains Mono' },
+          axisLabel: { color: '#64748B', fontSize: 9, fontFamily: 'Inter' },
           splitLine: { show: false },
         },
       ],
@@ -91,7 +90,7 @@
         trigger: 'axis', axisPointer: { type: 'cross', crossStyle: { color: CHART_COLORS.crosshair } },
         backgroundColor: CHART_COLORS.tooltip_bg,
         borderColor: CHART_COLORS.tooltip_border,
-        textStyle: { color: '#CBD5E1', fontSize: 11, fontFamily: 'JetBrains Mono' },
+        textStyle: { color: '#CBD5E1', fontSize: 11, fontFamily: 'Inter' },
       },
       dataZoom: [
         { type: 'inside', xAxisIndex: [0, 1], start: 0, end: 100 },
@@ -140,9 +139,18 @@
     let ro: ResizeObserver;
     (async () => {
       const echarts = await import('echarts');
-      chart = echarts.init(chartEl, null, { renderer: 'canvas' });
-      ro = new ResizeObserver(() => chart.resize());
-      ro.observe(chartEl);
+      await new Promise<void>(r => requestAnimationFrame(() => r()));
+
+      const w = wrapperEl.clientWidth;
+      const h = wrapperEl.clientHeight;
+      chart = echarts.init(chartEl, null, { renderer: 'canvas', width: w, height: h });
+
+      ro = new ResizeObserver(() => {
+        const rw = wrapperEl.clientWidth;
+        const rh = wrapperEl.clientHeight;
+        if (rw > 0 && rh > 0) chart.resize({ width: rw, height: rh });
+      });
+      ro.observe(wrapperEl);
       await loadData();
     })();
     return () => { if (ro) ro.disconnect(); if (chart) chart.dispose(); };
@@ -153,9 +161,9 @@
   $: if (browser && $theme && chart) renderChart();
 </script>
 
-<div class="flex flex-col h-full bg-terminal-bg">
+<div style="display: flex; flex-direction: column; height: 100%; background: var(--color-terminal-bg, #0D0F14);">
   <!-- Chart toolbar -->
-  <div class="flex items-center gap-2 px-3 py-1 border-b border-terminal-border">
+  <div class="flex items-center gap-2 px-3 py-1 border-b border-terminal-border" style="flex-shrink: 0;">
     <span class="text-slate-300 text-xs font-mono font-semibold">{symbol}</span>
     <span class="text-neutral text-xxs">Daily</span>
     <div class="flex-1"></div>
@@ -170,7 +178,6 @@
         >{p}</button>
       {/each}
     </div>
-    <!-- Legend -->
     <div class="flex items-center gap-3 ml-2">
       <span class="flex items-center gap-1 text-xxs" style="color:#F59E0B">
         <span class="w-4 h-px" style="background:#F59E0B;display:inline-block"></span>MA20
@@ -182,13 +189,15 @@
   </div>
 
   <!-- Chart canvas -->
-  {#if loading}
-    <div class="flex items-center justify-center flex-1">
-      <svg class="w-5 h-5 animate-spin text-accent" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"/>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-      </svg>
-    </div>
-  {/if}
-  <div bind:this={chartEl} class="flex-1 w-full min-h-[160px]" class:hidden={loading}></div>
+  <div bind:this={wrapperEl} style="flex: 1; position: relative; overflow: hidden; min-height: 0;">
+    {#if loading}
+      <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 10; background: var(--color-terminal-bg, #0D0F14);">
+        <svg class="w-5 h-5 animate-spin text-accent" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"/>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+        </svg>
+      </div>
+    {/if}
+    <div bind:this={chartEl} style="width: 100%; height: 100%;"></div>
+  </div>
 </div>

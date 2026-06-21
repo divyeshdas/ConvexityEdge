@@ -30,7 +30,7 @@
         trigger: 'axis',
         backgroundColor: CHART_COLORS.tooltip_bg,
         borderColor: CHART_COLORS.tooltip_border,
-        textStyle: { color: '#CBD5E1', fontSize: 11, fontFamily: 'JetBrains Mono' },
+        textStyle: { color: '#CBD5E1', fontSize: 11, fontFamily: 'Inter' },
         formatter: (p: any) => {
           const d = p[0]?.data;
           return d ? `Strike: ${d[0]}<br/>IV: ${(d[1]*100).toFixed(1)}%` : '';
@@ -39,7 +39,7 @@
       xAxis: {
         type: 'value', name: 'Strike',
         nameTextStyle: { color: '#475569', fontSize: 10 },
-        axisLabel: { color: '#64748B', fontSize: 10, fontFamily: 'JetBrains Mono' },
+        axisLabel: { color: '#64748B', fontSize: 10, fontFamily: 'Inter' },
         axisLine: { lineStyle: { color: '#252836' } },
         splitLine: { lineStyle: { color: '#1A1D27' } },
       },
@@ -47,7 +47,7 @@
         type: 'value', name: 'IV %',
         nameTextStyle: { color: '#475569', fontSize: 10 },
         axisLabel: {
-          color: '#64748B', fontSize: 10, fontFamily: 'JetBrains Mono',
+          color: '#64748B', fontSize: 10, fontFamily: 'Inter',
           formatter: (v: number) => `${(v*100).toFixed(0)}%`,
         },
         axisLine: { lineStyle: { color: '#252836' } },

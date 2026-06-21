@@ -30,7 +30,7 @@ export default {
         rho:      '#FBBF24',
       },
       fontFamily: {
-        mono: ['JetBrains Mono', 'Fira Code', 'Consolas', 'monospace'],
+        mono: ['Inter', 'system-ui', 'sans-serif'],
         sans: ['DM Sans', 'system-ui', 'sans-serif'],
       },
       fontSize: {
