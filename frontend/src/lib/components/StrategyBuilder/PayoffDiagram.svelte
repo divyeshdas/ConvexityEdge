@@ -25,12 +25,14 @@
       grid: { left: 55, right: 20, top: 20, bottom: 40 },
       tooltip: {
         trigger: 'axis',
+        confine: true,
+        appendToBody: true,
         backgroundColor: CHART_COLORS.tooltip_bg,
         borderColor: CHART_COLORS.tooltip_border,
         borderWidth: 1,
         padding: [8, 12],
         textStyle: { color: '#CBD5E1', fontSize: 11, fontFamily: 'Inter' },
-        extraCssText: 'border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.5);',
+        extraCssText: 'border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.5); z-index: 9999;',
         formatter: (params: any) => {
           const price = params[0]?.axisValue;
           const pnl   = params[0]?.data;
