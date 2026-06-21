@@ -20,7 +20,7 @@
     const zeroLine = prices.map(p => 0);
 
     chart.setOption({
-      backgroundColor: '#0D0F14',
+      backgroundColor: '#000000',
       animation: false,
       grid: { left: 55, right: 20, top: 20, bottom: 40 },
       tooltip: {
@@ -42,7 +42,7 @@
       xAxis: {
         type: 'category', data: prices.map(p => p.toFixed(0)),
         axisLabel: { color: '#64748B', fontSize: 9, fontFamily: 'Inter', interval: Math.floor(prices.length / 8) },
-        axisLine: { lineStyle: { color: '#252836' } },
+        axisLine: { lineStyle: { color: '#1A1A1A' } },
         splitLine: { show: false },
       },
       yAxis: {
@@ -51,8 +51,8 @@
           color: '#64748B', fontSize: 9, fontFamily: 'Inter',
           formatter: (v: number) => `₹${v.toFixed(0)}`,
         },
-        axisLine: { lineStyle: { color: '#252836' } },
-        splitLine: { lineStyle: { color: '#1A1D27' } },
+        axisLine: { lineStyle: { color: '#1A1A1A' } },
+        splitLine: { lineStyle: { color: '#111111' } },
       },
       series: [
         {

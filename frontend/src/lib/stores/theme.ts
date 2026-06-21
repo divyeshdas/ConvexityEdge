@@ -4,12 +4,12 @@ import { browser } from '$app/environment';
 type Theme = 'dark' | 'light';
 
 const DARK_VARS: Record<string, string> = {
-  '--t-bg':      '#0D0F14',
-  '--t-surface': '#13161E',
-  '--t-panel':   '#1A1D27',
-  '--t-border':  '#252836',
-  '--t-muted':   '#2E3245',
-  '--t-atm':     '#1E3A5F',
+  '--t-bg':      '#000000',
+  '--t-surface': '#0A0A0A',
+  '--t-panel':   '#111111',
+  '--t-border':  '#1A1A1A',
+  '--t-muted':   '#222222',
+  '--t-atm':     '#0C1E33',
 };
 const LIGHT_VARS: Record<string, string> = {
   '--t-bg':      '#F8F5F0',

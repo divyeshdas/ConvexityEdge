@@ -4,14 +4,14 @@
 
 /* ── Theme CSS variables (dark-mode defaults; JS overrides these on the fly) ─ */
 :root {
-  --t-bg:      #0D0F14;
-  --t-surface: #13161E;
-  --t-panel:   #1A1D27;
-  --t-border:  #252836;
-  --t-muted:   #2E3245;
-  --t-atm:     #1E3A5F;
-  --scrollbar-track:        #13161E;
-  --scrollbar-thumb:        #252836;
+  --t-bg:      #000000;
+  --t-surface: #0A0A0A;
+  --t-panel:   #111111;
+  --t-border:  #1A1A1A;
+  --t-muted:   #222222;
+  --t-atm:     #0C1E33;
+  --scrollbar-track:        #000000;
+  --scrollbar-thumb:        #1A1A1A;
   --scrollbar-thumb-hover:  #3B82F6;
 }
 html:not(.dark) {
@@ -59,27 +59,27 @@ html:not(.dark) body { color: #0F172A; }
   font-size: 0.75rem;
 }
 .terminal-table th {
-  background: #13161E;
+  background: #0A0A0A;
   color: #64748B;
   font-weight: 500;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   font-size: 0.65rem;
   padding: 6px 8px;
-  border-bottom: 1px solid #252836;
+  border-bottom: 1px solid #1A1A1A;
   position: sticky;
   top: 0;
   z-index: 10;
 }
 .terminal-table td {
   padding: 4px 8px;
-  border-bottom: 1px solid #1A1D27;
+  border-bottom: 1px solid #111111;
   color: #CBD5E1;
   white-space: nowrap;
 }
-.terminal-table tr:hover td { background: #1A1D27; }
+.terminal-table tr:hover td { background: #111111; }
 .terminal-table .row-atm td {
-  background: #1E3A5F !important;
+  background: #0C1E33 !important;
   border-top: 1px solid #3B82F6;
   border-bottom: 1px solid #3B82F6;
   color: #F1F5F9;
@@ -104,8 +104,8 @@ html:not(.dark) .terminal-table .row-atm td {
 
 /* ── Stat ticker bar ──────────────────────────────────────────────────────── */
 .stat-bar {
-  background: #13161E;
-  border-bottom: 1px solid #252836;
+  background: #0A0A0A;
+  border-bottom: 1px solid #1A1A1A;
   display: flex;
   gap: 0;
   overflow-x: auto;
@@ -121,7 +121,7 @@ html:not(.dark) .stat-bar {
   display: flex;
   flex-direction: column;
   padding: 6px 16px;
-  border-right: 1px solid #252836;
+  border-right: 1px solid #1A1A1A;
   min-width: fit-content;
 }
 html:not(.dark) .stat-item { border-right-color: #D4CEC6; }
@@ -152,13 +152,13 @@ html:not(.dark) .stat-value { color: #0F172A; }
 }
 
 /* ── Panel card ───────────────────────────────────────────────────────────── */
-.panel { background: #13161E; border: 1px solid #252836; }
+.panel { background: #0A0A0A; border: 1px solid #1A1A1A; }
 html:not(.dark) .panel { background: #FAF7F3; border-color: #D4CEC6; }
 
 /* ── Trade panel inputs ───────────────────────────────────────────────────── */
 .trade-input {
-  background: #0D0F14;
-  border: 1px solid #252836;
+  background: #000000;
+  border: 1px solid #1A1A1A;
   color: #F1F5F9;
   font-family: 'Inter', system-ui, sans-serif;
   font-variant-numeric: tabular-nums;
@@ -192,7 +192,7 @@ html:not(.dark) .trade-input {
 
 /* ── Loading shimmer ─────────────────────────────────────────────────────── */
 .shimmer {
-  background: linear-gradient(90deg, #13161E 25%, #1A1D27 50%, #13161E 75%);
+  background: linear-gradient(90deg, #0A0A0A 25%, #111111 50%, #0A0A0A 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }

@@ -23,7 +23,7 @@
     const puts  = pts.filter(p => p.option_type === 'P');
 
     chart.setOption({
-      backgroundColor: '#0D0F14',
+      backgroundColor: '#000000',
       animation: false,
       grid: { left: 50, right: 20, top: 30, bottom: 40 },
       tooltip: {
@@ -45,8 +45,8 @@
         type: 'value', name: 'Strike',
         nameTextStyle: { color: '#475569', fontSize: 10 },
         axisLabel: { color: '#64748B', fontSize: 10, fontFamily: 'Inter' },
-        axisLine: { lineStyle: { color: '#252836' } },
-        splitLine: { lineStyle: { color: '#1A1D27' } },
+        axisLine: { lineStyle: { color: '#1A1A1A' } },
+        splitLine: { lineStyle: { color: '#111111' } },
       },
       yAxis: {
         type: 'value', name: 'IV %',
@@ -55,8 +55,8 @@
           color: '#64748B', fontSize: 10, fontFamily: 'Inter',
           formatter: (v: number) => `${(v*100).toFixed(0)}%`,
         },
-        axisLine: { lineStyle: { color: '#252836' } },
-        splitLine: { lineStyle: { color: '#1A1D27' } },
+        axisLine: { lineStyle: { color: '#1A1A1A' } },
+        splitLine: { lineStyle: { color: '#111111' } },
       },
       series: [
         {

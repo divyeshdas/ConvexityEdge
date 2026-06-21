@@ -23,7 +23,7 @@
       ).flat();
 
       chart.setOption({
-        backgroundColor: '#0D0F14',
+        backgroundColor: '#000000',
         animation: false,
         tooltip: {},
         visualMap: {
@@ -50,8 +50,8 @@
           boxWidth: 200, boxDepth: 80,
           light: { main: { intensity: 1.2 }, ambient: { intensity: 0.3 } },
           viewControl: { autoRotate: false, alpha: 30, beta: 40 },
-          axisLine: { lineStyle: { color: '#252836' } },
-          splitLine: { lineStyle: { color: '#1A1D27' } },
+          axisLine: { lineStyle: { color: '#1A1A1A' } },
+          splitLine: { lineStyle: { color: '#111111' } },
         },
         series: [{
           type: 'surface',

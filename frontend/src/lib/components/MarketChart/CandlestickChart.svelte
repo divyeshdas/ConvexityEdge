@@ -52,7 +52,7 @@
 
     const isDark = $theme === 'dark';
     chart.setOption({
-      backgroundColor: isDark ? '#0D0F14' : '#F1F4F9',
+      backgroundColor: isDark ? '#000000' : '#F1F4F9',
       animation: false,
       grid: [
         { left: 60, right: 60, top: 10, bottom: 80 },
@@ -102,7 +102,7 @@
         { type: 'inside', xAxisIndex: [0, 1], start: 0, end: 100 },
         {
           type: 'slider', xAxisIndex: [0, 1], bottom: 0, height: 20,
-          fillerColor: 'rgba(59,130,246,0.1)', borderColor: '#252836',
+          fillerColor: 'rgba(59,130,246,0.1)', borderColor: '#1A1A1A',
           textStyle: { color: '#475569' },
         },
       ],
@@ -167,7 +167,7 @@
   $: if (browser && $theme && chart) renderChart();
 </script>
 
-<div style="display: flex; flex-direction: column; height: 100%; background: var(--color-terminal-bg, #0D0F14);">
+<div style="display: flex; flex-direction: column; height: 100%; background: var(--color-terminal-bg, #000000);">
   <!-- Chart toolbar -->
   <div class="flex items-center gap-2 px-3 py-1 border-b border-terminal-border" style="flex-shrink: 0;">
     <span class="text-slate-300 text-xs font-mono font-semibold">{symbol}</span>
@@ -197,7 +197,7 @@
   <!-- Chart canvas -->
   <div bind:this={wrapperEl} style="flex: 1; position: relative; overflow: hidden; min-height: 0;">
     {#if loading}
-      <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 10; background: var(--color-terminal-bg, #0D0F14);">
+      <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 10; background: var(--color-terminal-bg, #000000);">
         <svg class="w-5 h-5 animate-spin text-accent" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"/>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
