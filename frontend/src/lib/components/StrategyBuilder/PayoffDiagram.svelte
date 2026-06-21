@@ -27,7 +27,10 @@
         trigger: 'axis',
         backgroundColor: CHART_COLORS.tooltip_bg,
         borderColor: CHART_COLORS.tooltip_border,
+        borderWidth: 1,
+        padding: [8, 12],
         textStyle: { color: '#CBD5E1', fontSize: 11, fontFamily: 'Inter' },
+        extraCssText: 'border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.5);',
         formatter: (params: any) => {
           const price = params[0]?.axisValue;
           const pnl   = params[0]?.data;

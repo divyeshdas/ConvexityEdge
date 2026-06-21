@@ -30,7 +30,10 @@
         trigger: 'axis',
         backgroundColor: CHART_COLORS.tooltip_bg,
         borderColor: CHART_COLORS.tooltip_border,
+        borderWidth: 1,
+        padding: [8, 12],
         textStyle: { color: '#CBD5E1', fontSize: 11, fontFamily: 'Inter' },
+        extraCssText: 'border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.5);',
         formatter: (p: any) => {
           const d = p[0]?.data;
           return d ? `Strike: ${d[0]}<br/>IV: ${(d[1]*100).toFixed(1)}%` : '';

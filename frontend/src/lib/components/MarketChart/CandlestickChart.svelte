@@ -87,10 +87,14 @@
         },
       ],
       tooltip: {
-        trigger: 'axis', axisPointer: { type: 'cross', crossStyle: { color: CHART_COLORS.crosshair } },
+        trigger: 'axis',
+        axisPointer: { type: 'cross', crossStyle: { color: CHART_COLORS.crosshair } },
         backgroundColor: CHART_COLORS.tooltip_bg,
         borderColor: CHART_COLORS.tooltip_border,
+        borderWidth: 1,
+        padding: [8, 12],
         textStyle: { color: '#CBD5E1', fontSize: 11, fontFamily: 'Inter' },
+        extraCssText: 'border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.5);',
       },
       dataZoom: [
         { type: 'inside', xAxisIndex: [0, 1], start: 0, end: 100 },

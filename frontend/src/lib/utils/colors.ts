@@ -43,6 +43,6 @@ export const CHART_COLORS = {
   grid:        '#1A1D27',
   axis:        '#334155',
   crosshair:   '#3B82F6',
-  tooltip_bg:  '#13161E',
-  tooltip_border: '#252836',
+  tooltip_bg:  'rgba(30, 34, 46, 0.95)',
+  tooltip_border: '#3B82F6',
 };
