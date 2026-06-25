@@ -189,7 +189,7 @@
 
     <!-- Chart panel -->
     {#if showChart}
-      <div class="border-t border-terminal-border shrink-0" style="flex: 0 0 40%; min-height: 200px;">
+      <div class="border-t border-terminal-border" style="height: 40%; min-height: 200px; flex-shrink: 0;">
         <MarketChartPanel symbol={$selectedSymbol} />
       </div>
     {/if}

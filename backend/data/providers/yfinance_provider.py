@@ -43,9 +43,20 @@ VALID_PERIODS   = {"1d","5d","1mo","3mo","6mo","1y","2y","5y","10y","ytd","max"}
 VALID_INTERVALS = {"1m","2m","5m","15m","30m","60m","90m","1h","1d","5d","1wk","1mo","3mo"}
 
 
+_INDEX_TICKERS = {
+    "NIFTY":      "^NSEI",
+    "BANKNIFTY":  "^NSEBANK",
+    "FINNIFTY":   "NIFTY_FIN_SERVICE.NS",
+    "MIDCPNIFTY": "NIFTY_MID_SELECT.NS",
+    "SENSEX":     "^BSESN",
+}
+
+
 def _nse(symbol: str) -> str:
-    """Append NSE suffix for yfinance if not already present."""
+    """Convert app symbol to yfinance ticker."""
     s = symbol.upper()
+    if s in _INDEX_TICKERS:
+        return _INDEX_TICKERS[s]
     if s.endswith('.NS') or s.endswith('.BO'):
         return s
     return f"{s}.NS"
